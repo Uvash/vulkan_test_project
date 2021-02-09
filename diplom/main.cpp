@@ -1,9 +1,20 @@
 ﻿#include "stdafx.h"
+#include "DiplomApp.h"
+#include "WindowManager.h"
 
 int main()
 {
-	std::cout << "hello world" << std::endl;
-	std::cout << "hello gmyza" << std::endl;
-	return 0;
+	DiplomApp app;
+	try
+	{
+		app.run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 	
 }
