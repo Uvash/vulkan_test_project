@@ -4,15 +4,18 @@
 
 void DiplomApp::init()
 {
-	whindow.windowManagerInit();
+	whindow.windowManagerInit(this);
+	//render.RenderInit(this);
 }
 
 void DiplomApp::mainLoop()
 {
+	
 	while (!whindow.shoudClose())
 	{
 		whindow.pollEvents();
 	}
+	
 }
 void DiplomApp::cleanup()
 {
@@ -26,3 +29,18 @@ void DiplomApp::run()
 	cleanup();
 }
 
+std::vector<const char*> DiplomApp::getRequiredExtensions()
+{
+	
+	std::vector<const char*> extensions;
+	//Спрашиваем окно о необходимых ему расширениях
+	extensions = whindow.getRequiredExtensions();
+	//Проверяем флаг дебага 
+	//Если мы в дебаге, докидываем ещё одно расширение для отладки
+	if (enableValidationLayers)
+	{
+		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	}
+
+	return extensions;
+}

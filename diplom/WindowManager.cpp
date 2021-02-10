@@ -16,8 +16,13 @@ WindowManager::~WindowManager()
 
 }
 
-void WindowManager::windowManagerInit()
+void WindowManager::windowManagerInit(DiplomApp* new_app)
 {
+	if (new_app == nullptr)
+	{
+		throw std::runtime_error("App must be created before create WindowManager");
+	}
+	app = new_app;
 	glfwInit();
 	//Просим glfw не создавать контекст opengl
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -51,4 +56,16 @@ void WindowManager::pollEvents()
 	if (windowCreated)
 		glfwPollEvents();
 	return;
+}
+
+std::vector<const char*> WindowManager::getRequiredExtensions()
+{
+	uint32_t glfwExtensionCount = 0;
+	const char** glfwExtensions;
+	//Опрашиваем glfw о необходимых ему расширениях
+	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+	//Выделяем память под список расширений
+	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+	return extensions;
 }
