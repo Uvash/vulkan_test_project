@@ -29,5 +29,8 @@ public:
 	bool shoudClose();
 	//опрашиваем окно о событиях
 	void pollEvents();
+	//сообщает о необходимых расширениях окна
 	std::vector<const char*> getRequiredExtensions();
+	//связывает поверхность с окном
+	void createSurface(VkInstance& instance, VkSurfaceKHR& surface);
 };

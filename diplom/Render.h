@@ -2,11 +2,13 @@
 #include "stdafx.h"
 
 class DiplomApp;
+class WindowManager;
 
 class Render
 {
 private:
 	DiplomApp* app; //Указатель на наше приложение
+	WindowManager* windowManager; //Указатель на менеджер окон
 
 	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ВУЛКАН*/
 private:
@@ -22,9 +24,13 @@ private:
 	//Список подключаемых слоёв во время дебага
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ПОВЕРХНОСТЬ*/
+	//Поверхность на которую мы будем выводить изображение
+	VkSurfaceKHR surface;
+	void createSurface();
 
 public:
 	Render();
 	~Render();
-	void RenderInit(DiplomApp* new_app);
+	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager);
 };

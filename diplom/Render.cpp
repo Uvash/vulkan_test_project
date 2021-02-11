@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Render.h"
 #include "DiplomApp.h"
+#include "WindowManager.h"
 
 Render::Render()
 {
@@ -8,17 +9,24 @@ Render::Render()
 }
 Render::~Render()
 {
+	vkDestroySurfaceKHR(instance, surface, nullptr); //”ничтожаем поверхность вывода
 	vkDestroyInstance(instance, nullptr); //”ничтожаем экземпл€р вулкана
 }
 
-void Render::RenderInit(DiplomApp* new_app)
+void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager)
 {
 	if (new_app == nullptr)
 	{
 		throw std::runtime_error("App must be created before create Vulkan");
 	}
+	if (new_windowManager == nullptr)
+	{
+		throw std::runtime_error("WindowManager must be created before create Vulkan");
+	}
 	app = new_app;
+	windowManager = new_windowManager;
 	createInstance();
+	createSurface();
 }
 
 void Render::createInstance()
@@ -143,4 +151,9 @@ bool Render::checkValidationLayerSupport()
 	}
 
 	return true;
+}
+
+void Render::createSurface()
+{
+	windowManager->createSurface(instance, surface);
 }

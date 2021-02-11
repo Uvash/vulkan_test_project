@@ -70,3 +70,12 @@ std::vector<const char*> WindowManager::getRequiredExtensions()
 
 	return extensions;
 }
+
+void WindowManager::createSurface(VkInstance& instance, VkSurfaceKHR& surface)
+{
+	//Создаёт поверхность выбор поверхности и платформы отдаём на откуп glfw
+	if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create window surface!");
+	}
+}

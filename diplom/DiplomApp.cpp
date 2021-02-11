@@ -4,7 +4,7 @@
 void DiplomApp::init()
 {
 	whindow.windowManagerInit(this);
-	render.RenderInit(this);
+	render.RenderInit(this, &whindow);
 }
 
 void DiplomApp::mainLoop()
