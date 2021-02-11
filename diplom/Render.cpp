@@ -9,6 +9,10 @@ Render::Render()
 }
 Render::~Render()
 {
+	if (app->enableValidationLayers)
+	{
+		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+	}
 	vkDestroySurfaceKHR(instance, surface, nullptr); //”ничтожаем поверхность вывода
 	vkDestroyInstance(instance, nullptr); //”ничтожаем экземпл€р вулкана
 }
@@ -25,8 +29,10 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager)
 	}
 	app = new_app;
 	windowManager = new_windowManager;
+
 	createInstance();
 	createSurface();
+	setupDebugMessenger();
 }
 
 void Render::createInstance()
@@ -156,4 +162,56 @@ bool Render::checkValidationLayerSupport()
 void Render::createSurface()
 {
 	windowManager->createSurface(instance, surface);
+}
+
+void Render::setupDebugMessenger()
+{
+	if (!app->enableValidationLayers)
+		return;
+
+	VkDebugUtilsMessengerCreateInfoEXT createInfo;
+	populateDebugMessengerCreateInfo(createInfo);
+	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to set up debug messenger!");
+	}
+}
+/*
+ *@brief —оздаЄм обработчик ошибок, подгружа€ его из дополнительных расширений
+ *
+ *@param  instance экземпл€р вулкана
+ *@param  pCreateInfo структура, содержаща€ информацию необходимую дл€ конструировани€ обработчика
+ *@param  pAllocator дополнительный аллокатор
+ *@param  pDebugMessenger место куда будет записан обработчик ошибок
+ *
+ *@return ¬озвращает статус операции
+ */
+VkResult Render::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+{
+	// vkGetInstanceProcAddr возвращает указатель на фунцию, если она может быть загружена
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+	}
+	else
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+
+}
+/*
+ *@brief ”ничтожаем обработчик, вызыва€ функции из дополнительных расширений
+ *
+ *@param  instance экземпл€р вулкана
+ *@param  pDebugMessenger обработчик ошибок
+ *@param  pAllocator дополнительный аллокатор
+ */
+void Render::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+{
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		func(instance, debugMessenger, pAllocator);
+	}
 }

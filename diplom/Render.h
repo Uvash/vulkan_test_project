@@ -28,6 +28,12 @@ private:
 	//Поверхность на которую мы будем выводить изображение
 	VkSurfaceKHR surface;
 	void createSurface();
+	/*Подключаем обработчик ошибок*/
+	//экземпляр обработчика ошибок
+	VkDebugUtilsMessengerEXT debugMessenger;
+	void setupDebugMessenger();
+	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
+	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 
 public:
 	Render();
