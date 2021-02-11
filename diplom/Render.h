@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "HelpStructures.h"
 
 class DiplomApp;
 class WindowManager;
@@ -34,9 +35,22 @@ private:
 	void setupDebugMessenger();
 	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ФИЗИЧЕСКОГО УСТРОЙСТВА*/
+	//Хендлер физического устройства
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	//Список дополнительных плюшек устройства
+	VkPhysicalDeviceFeatures deviceFeatures{};
+	//Список необходимых расширений для устройства
+	const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
+	void pickPhysicalDevice();
+	bool isDeviceSuitable(VkPhysicalDevice device);
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 public:
 	Render();
 	~Render();
 	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager);
+
 };

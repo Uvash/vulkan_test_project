@@ -2,6 +2,7 @@
 #include "Render.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
+#include "HelpStructures.h"
 
 Render::Render()
 {
@@ -9,6 +10,7 @@ Render::Render()
 }
 Render::~Render()
 {
+
 	if (app->enableValidationLayers)
 	{
 		DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -33,6 +35,7 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager)
 	createInstance();
 	createSurface();
 	setupDebugMessenger();
+	pickPhysicalDevice();
 }
 
 void Render::createInstance()
@@ -214,4 +217,146 @@ void Render::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMess
 	{
 		func(instance, debugMessenger, pAllocator);
 	}
+}
+
+void Render::pickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+	if (deviceCount == 0)
+	{
+		throw std::runtime_error("failed to find GPUs with Vulkan support!");
+	}
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+	//Ищем подходящие под наши задачи устройство
+	for (const auto& device : devices)
+	{
+		if (isDeviceSuitable(device))
+		{
+			physicalDevice = device;
+			break;
+		}
+
+	}
+	//если не смогли найти устройство
+	if (physicalDevice == VK_NULL_HANDLE)
+	{
+		throw std::runtime_error("failed to find a suitable GPU!");
+	}
+}
+
+bool Render::isDeviceSuitable(VkPhysicalDevice device)
+{
+	/*
+	//Получаем данные об устройстве
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+	//Получаем данные об поддерживаемых фичах
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	std::cout << deviceProperties.deviceName << '\n';
+	*/
+	//Нам нужно устройство с выводом графики
+	QueueFamilyIndices indices = findQueueFamilies(device);
+	bool extensionsSupported = checkDeviceExtensionSupport(device);
+
+	bool swapChainAdequate = false;
+	if (extensionsSupported)
+	{
+		SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+	}
+	return indices.isComplete() && extensionsSupported && swapChainAdequate;
+
+}
+
+QueueFamilyIndices Render::findQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+
+	//Узнаём и загружаем очереди
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+		nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+		queueFamilies.data());
+	//Ищем необходимую очередь
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies)
+	{
+		//Проверяем может ли текущая очередь поддерживать показ на поверхности
+		VkBool32 presentSupport = false;
+
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+		if (presentSupport && !(indices.presentFamily.has_value()))
+		{
+			indices.presentFamily = i;
+		}
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT && !(indices.graphicsFamily.has_value()))
+		{
+			indices.graphicsFamily = i;
+		}
+		// Мы будем использовать для обмена очередь содержащую VK_QUEUE_TRANSFER_BIT и не содержащую VK_QUEUE_GRAPHICS_BIT
+		if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && !(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+		{
+			indices.transferFamily = i;
+		}
+
+		//Все очереди подготовленны
+		if (indices.isComplete())
+		{
+			break;
+		}
+		i++;
+	}
+	return indices;
+}
+
+bool Render::checkDeviceExtensionSupport(VkPhysicalDevice device)
+{
+	//Запрашиваем расширения, поддерживаемые устройством
+	uint32_t extensionCount;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+	//Обходим доступные расширения удаляя найденые
+	for (const auto& extension : availableExtensions)
+	{
+		requiredExtensions.erase(extension.extensionName);
+	}
+	//После цикла остаются не поддерживаемые расширения
+	return requiredExtensions.empty();
+}
+
+SwapChainSupportDetails Render::querySwapChainSupport(VkPhysicalDevice device)
+{
+	SwapChainSupportDetails details;
+
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+	uint32_t formatCount;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+	if (formatCount != 0)
+	{
+		details.formats.resize(formatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+	}
+
+	uint32_t presentModeCount;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+	if (presentModeCount != 0)
+	{
+		details.presentModes.resize(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+	}
+	return details;
 }
