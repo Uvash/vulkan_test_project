@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "WindowManager.h"
+#include "DiplomApp.h"
 
 WindowManager::WindowManager()
 {

@@ -1,11 +1,10 @@
 #include "stdafx.h"
 #include "DiplomApp.h"
 
-
 void DiplomApp::init()
 {
 	whindow.windowManagerInit(this);
-	//render.RenderInit(this);
+	render.RenderInit(this);
 }
 
 void DiplomApp::mainLoop()
