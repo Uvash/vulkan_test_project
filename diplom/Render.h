@@ -48,6 +48,16 @@ private:
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЛОГИЧЕСКОГО УСТРОЙСТВА*/
+	void createLogicalDevice();
+	//Экземпляр логического устройства
+	VkDevice device;
+	//Экземпляр очереди для отрисовки
+	VkQueue graphicsQueue;
+	//Экземпляр очереди для показа
+	VkQueue presentQueue;
+	//Экземпляр очереди для обмена
+	VkQueue transfertQueue;
 public:
 	Render();
 	~Render();
