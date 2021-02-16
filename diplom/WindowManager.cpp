@@ -79,3 +79,8 @@ void WindowManager::createSurface(VkInstance& instance, VkSurfaceKHR& surface)
 		throw std::runtime_error("failed to create window surface!");
 	}
 }
+
+void WindowManager::getFramebufferSize(int &width, int &height)
+{
+	glfwGetFramebufferSize(window, &width, &height);
+}

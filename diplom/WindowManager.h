@@ -33,4 +33,6 @@ public:
 	std::vector<const char*> getRequiredExtensions();
 	//связывает поверхность с окном
 	void createSurface(VkInstance& instance, VkSurfaceKHR& surface);
+	//Узнаёт текущие размеры окон
+	void getFramebufferSize(int &width, int &height);
 };

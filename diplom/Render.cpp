@@ -10,6 +10,7 @@ Render::Render()
 }
 Render::~Render()
 {
+	cleanupSwapChain();
 	vkDestroyDevice(device, nullptr);
 	if (app->enableValidationLayers)
 	{
@@ -37,6 +38,7 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager)
 	setupDebugMessenger();
 	pickPhysicalDevice();
 	createLogicalDevice();
+	createSwapChain();
 }
 
 void Render::createInstance()
@@ -338,6 +340,12 @@ bool Render::checkDeviceExtensionSupport(VkPhysicalDevice device)
 	return requiredExtensions.empty();
 }
 
+/*
+ *@brief Представляет необходимую информацию для проверки совместимости цепочек обмена и системы
+ *
+ *@param device физическое устройство поддерживающие вулкан
+ *@return Структура с информацией о цепочке обмена
+ */
 SwapChainSupportDetails Render::querySwapChainSupport(VkPhysicalDevice device)
 {
 	SwapChainSupportDetails details;
@@ -408,4 +416,141 @@ void Render::createLogicalDevice()
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 	vkGetDeviceQueue(device, indices.transferFamily.value(), 0, &transfertQueue);
+}
+
+void Render::createSwapChain()
+{
+	//Проверяем и подготавливаем данные для структуры описывающей Swapchain
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
+	//Сохраняем ормат и размеры изображения для будущего
+	swapChainImageFormat = surfaceFormat.format;
+	swapChainExtent = extent;
+
+	//Указываем количество изображений в цепочке показа
+	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+
+	//Проверяем не привысили ли мы лимит 0 - означает что лимита нет
+	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
+	{
+		imageCount = swapChainSupport.capabilities.maxImageCount;
+	}
+
+	//Начинаем создавать структуру для цепочки обмена
+	VkSwapchainCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	createInfo.surface = surface;
+
+	createInfo.minImageCount = imageCount;
+	createInfo.imageFormat = surfaceFormat.format;
+	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+	createInfo.imageExtent = extent;
+	createInfo.imageArrayLayers = 1; //Количество слоёв у изображения
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; //Назначение изображения (отрисовка на экране)
+
+	//Подключаем очереди команд
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
+	if (indices.graphicsFamily != indices.presentFamily)
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		createInfo.queueFamilyIndexCount = 0; // Optional
+		createInfo.pQueueFamilyIndices = nullptr; // Optional
+
+	}
+	//Указываем необходимость дополнительного преобразования. Точнее его отсутствии
+	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+	//Отключаем альфа канал
+	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+	createInfo.presentMode = presentMode;
+	//Указываем, что необходимо обрезать не показываемаемые пиксели
+	createInfo.clipped = VK_TRUE;
+	//Указатель на передущую цепочку обмена (по идее если мы пересоздаём её с новыми параметрами)
+	createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	//Создаём цепочку
+	if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create swap chain!");
+	}
+	//Сразу заполним дескрипторы изображений
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+	swapChainImages.resize(imageCount);
+	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+}
+
+void Render::cleanupSwapChain()
+{
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+/*
+ *@brief Выбирает необходимый цветовой формат из доступных
+ *
+ *@param availableFormats доступные цветовые форматы
+ *@return выбранный цветовой формат
+ */
+VkSurfaceFormatKHR Render::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+{
+	for (const auto& availableFormat : availableFormats)
+	{
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+		{
+			return availableFormat;
+		}
+	}
+	return availableFormats[0];
+}
+
+/*
+ *@brief Функция выбора предпочтительного режима показа
+ *
+ *@param availablePresentModes доступные режимы показа
+ *@return режим показа
+ */
+VkPresentModeKHR Render::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
+{
+	for (const auto& availablePresentMode : availablePresentModes)
+	{
+		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+		{
+			return availablePresentMode;
+		}
+	}
+	return VK_PRESENT_MODE_FIFO_KHR; //Этот режим доступен всегда
+}
+
+/*
+ *@brief Функция выбора ширины и высоты
+ *
+ *@param capabilities параметры цепочки показа
+ *@return текущие размеры
+ */
+VkExtent2D Render::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+{
+	if (capabilities.currentExtent.width != UINT32_MAX)
+	{
+		return capabilities.currentExtent;
+	}
+	else
+	{
+		int width, height;
+
+		windowManager->getFramebufferSize(width, height);
+		VkExtent2D actualExtent =
+		{
+			static_cast<uint32_t>(width),
+			static_cast<uint32_t>(height)
+		};
+	}
 }

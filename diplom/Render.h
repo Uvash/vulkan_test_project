@@ -50,6 +50,7 @@ private:
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЛОГИЧЕСКОГО УСТРОЙСТВА*/
 	void createLogicalDevice();
+	//Вместе с устройством создаём очереди
 	//Экземпляр логического устройства
 	VkDevice device;
 	//Экземпляр очереди для отрисовки
@@ -58,6 +59,21 @@ private:
 	VkQueue presentQueue;
 	//Экземпляр очереди для обмена
 	VkQueue transfertQueue;
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЦЕПОЧКИ ОБМЕНА*/
+	void createSwapChain();
+	void cleanupSwapChain();
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+	//Цепочка обмена
+	VkSwapchainKHR swapChain;
+	//Хендлеры изображений из цепочки обмена
+	std::vector<VkImage> swapChainImages;
+	//Формат изображений
+	VkFormat swapChainImageFormat;
+	//Размеры изображений
+	VkExtent2D swapChainExtent;
 public:
 	Render();
 	~Render();
