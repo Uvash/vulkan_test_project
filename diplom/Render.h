@@ -74,6 +74,39 @@ private:
 	VkFormat swapChainImageFormat;
 	//Размеры изображений
 	VkExtent2D swapChainExtent;
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРЕДСТАВЛЕНИЙ ИЗОБРАЖЕНИЙ*/
+	void createImageViews();
+	//Представления изображений
+	std::vector<VkImageView> swapChainImageViews;
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРОХОДА РЕНДЕРИНГА*/
+	void createRenderPass();
+	//Проход рендеринга
+	VkRenderPass renderPass;
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ СЛОЁВ (описывает как и какую информацию читать шейдерам)*/
+	void createDescriptorSetLayout();
+	//Дискриптор указывающий на глобальные переменные для использования в шейдере
+	VkDescriptorSetLayout descriptorSetLayout;
+	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ГРАФИЧЕСКОГО КОНВЕЕРА*/
+	void createGraphicsPipeline();
+	static std::vector<char> readFile(const std::string& filename);
+	VkShaderModule createShaderModule(const std::vector<char>& code);
+	
+	const std::vector<Vertex> vertices = {
+	{ {-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
+	{ {0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+	{ {0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},
+	{ {-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+	{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	{ {0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	{ {0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}},
+	{ {-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	//Слой для хранения переменных используемых в шейдере локальных переменных (привязанных к вершине)
+	VkPipelineLayout pipelineLayout;
+	//Графический конвеер
+	VkPipeline graphicsPipeline;
+
 public:
 	Render();
 	~Render();

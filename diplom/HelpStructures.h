@@ -23,3 +23,35 @@ struct SwapChainSupportDetails
 	std::vector<VkSurfaceFormatKHR> formats;
 	std::vector<VkPresentModeKHR> presentModes;
 };
+
+struct Vertex {
+	glm::vec3 pos;
+	glm::vec3 color;
+
+	//Структура описывающая вулкану откуда брать вершины и с каким смещением
+	static VkVertexInputBindingDescription getBindingDescription()
+	{
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0; //Координаты у нас с самого начала структуры
+		bindingDescription.stride = sizeof(Vertex); //Смещение до следующей структуры
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		return bindingDescription;
+	}
+	//Структура описывающая о том какие данные откуда брать
+	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+	{
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+		//Указываем параметры для координат
+		attributeDescriptions[0].binding = 0;	//Смещение от начала структуры
+		attributeDescriptions[0].location = 0;	//С какого слоя мы будет брать данные
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; //Указываем какой тип данных передаём vec2
+		attributeDescriptions[0].offset = offsetof(Vertex, pos); //Указываем смещение до списка вершин
+		//Указываем параметры для цвета
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+		return attributeDescriptions;
+	}
+};
