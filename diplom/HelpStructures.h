@@ -55,12 +55,12 @@ struct Vertex {
 		return attributeDescriptions;
 	}
 
-	//Структура содержащия глобальные матрицы преобразований
-	struct UniformBufferObject
-	{
-		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 proj;
-	};
+};
 
+//Структура содержащия глобальные матрицы преобразований
+struct UniformBufferObject
+{
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
 };

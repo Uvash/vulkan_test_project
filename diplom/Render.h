@@ -61,6 +61,7 @@ private:
 	VkQueue transfertQueue;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЦЕПОЧКИ ОБМЕНА*/
 	void createSwapChain();
+	void recreateSwapChain();
 	void cleanupSwapChain();
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
@@ -139,9 +140,34 @@ private:
 	std::vector<VkDeviceMemory> uniformBuffersMemory;
 	void createUniformBuffers();
 	void updateUniformBuffer(uint32_t currentImage);
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПУЛА ДЕСКРИПТОРА*/
+	void createDescriptorPool();
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+	
+	void createDescriptorSets();
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ КОМАНДНОГО БУФФЕРА*/
+	//Командный буфер
+	std::vector<VkCommandBuffer> commandBuffers;
+	const int MAX_FRAMES_IN_FLIGHT = 2; //Максимальное кол-во обрабатываемых изображений
+	//Семафоры сигнализирующий о готовности для рендеринга
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	//Семафоры сигнализирует о завершении рендеринга
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	//Какой кадр из буфера рисуется
+	size_t currentFrame = 0;
+	//Заборы для для предотвращения показа второго кадра
+	std::vector<VkFence> inFlightFences;
+	//Забор для предотвращения рендеринга кадра который рендериться
+	std::vector<VkFence> imagesInFlight;
+
+	void createCommandBuffers();
+	void createSyncObjects();
 public:
 	Render();
 	~Render();
 	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager);
+	void drawFrame();
+	void idleDevice();
 
 };

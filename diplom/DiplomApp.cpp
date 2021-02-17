@@ -13,8 +13,9 @@ void DiplomApp::mainLoop()
 	while (!whindow.shoudClose())
 	{
 		whindow.pollEvents();
+		render.drawFrame();
 	}
-	
+	render.idleDevice();
 }
 void DiplomApp::cleanup()
 {

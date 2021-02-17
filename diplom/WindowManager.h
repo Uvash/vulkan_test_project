@@ -35,4 +35,6 @@ public:
 	void createSurface(VkInstance& instance, VkSurfaceKHR& surface);
 	//Узнаёт текущие размеры окон
 	void getFramebufferSize(int &width, int &height);
+	//Устанавливает флаг framebufferResized
+	void setFramebufferResized(bool newFlag);
 };

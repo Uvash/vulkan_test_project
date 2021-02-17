@@ -84,3 +84,8 @@ void WindowManager::getFramebufferSize(int &width, int &height)
 {
 	glfwGetFramebufferSize(window, &width, &height);
 }
+
+void WindowManager::setFramebufferResized(bool newFlag)
+{
+	framebufferResized = newFlag;
+}
