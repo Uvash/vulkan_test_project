@@ -11,7 +11,7 @@ private:
 	DiplomApp* app; //Указатель на наше приложение
 	WindowManager* windowManager; //Указатель на менеджер окон
 
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ВУЛКАН*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ВУЛКАН*/
 private:
 	void createInstance(); //Создаёт объект Вулкана
 
@@ -25,7 +25,7 @@ private:
 	//Список подключаемых слоёв во время дебага
 	const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ПОВЕРХНОСТЬ*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ПОВЕРХНОСТЬ*/
 	//Поверхность на которую мы будем выводить изображение
 	VkSurfaceKHR surface;
 	void createSurface();
@@ -35,7 +35,7 @@ private:
 	void setupDebugMessenger();
 	VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ФИЗИЧЕСКОГО УСТРОЙСТВА*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ФИЗИЧЕСКОГО УСТРОЙСТВА*/
 	//Хендлер физического устройства
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	//Список дополнительных плюшек устройства
@@ -48,7 +48,7 @@ private:
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЛОГИЧЕСКОГО УСТРОЙСТВА*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЛОГИЧЕСКОГО УСТРОЙСТВА*/
 	void createLogicalDevice();
 	//Вместе с устройством создаём очереди
 	//Экземпляр логического устройства
@@ -59,7 +59,7 @@ private:
 	VkQueue presentQueue;
 	//Экземпляр очереди для обмена
 	VkQueue transfertQueue;
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЦЕПОЧКИ ОБМЕНА*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ЦЕПОЧКИ ОБМЕНА*/
 	void createSwapChain();
 	void cleanupSwapChain();
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -74,23 +74,23 @@ private:
 	VkFormat swapChainImageFormat;
 	//Размеры изображений
 	VkExtent2D swapChainExtent;
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРЕДСТАВЛЕНИЙ ИЗОБРАЖЕНИЙ*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРЕДСТАВЛЕНИЙ ИЗОБРАЖЕНИЙ*/
 	void createImageViews();
 	//Представления изображений
 	std::vector<VkImageView> swapChainImageViews;
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРОХОДА РЕНДЕРИНГА*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ПРОХОДА РЕНДЕРИНГА*/
 	void createRenderPass();
 	//Проход рендеринга
 	VkRenderPass renderPass;
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ СЛОЁВ (описывает как и какую информацию читать шейдерам)*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ СЛОЁВ (описывает как и какую информацию читать шейдерам)*/
 	void createDescriptorSetLayout();
 	//Дискриптор указывающий на глобальные переменные для использования в шейдере
 	VkDescriptorSetLayout descriptorSetLayout;
-	/*ФУНКЦИИ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ГРАФИЧЕСКОГО КОНВЕЕРА*/
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ГРАФИЧЕСКОГО КОНВЕЕРА*/
 	void createGraphicsPipeline();
 	static std::vector<char> readFile(const std::string& filename);
 	VkShaderModule createShaderModule(const std::vector<char>& code);
-	
+
 	const std::vector<Vertex> vertices = {
 	{ {-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
 	{ {0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -106,7 +106,39 @@ private:
 	VkPipelineLayout pipelineLayout;
 	//Графический конвеер
 	VkPipeline graphicsPipeline;
-
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРОВ ИЗОБРАЖЕНИЯ*/
+	void createFramebuffers();
+	//Кадровые буфферы
+	std::vector<VkFramebuffer> swapChainFramebuffers;
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ КОМАНДНОГО ПУЛА*/
+	//Командный пул
+	VkCommandPool commandPool;
+	//Командный пул для работы в памяти
+	VkCommandPool transfertСommandPool;
+	void initCommandPool();
+	void createCommandPool(uint32_t familyIndex, VkCommandPool* pool);
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ВЕРШИН*/
+	void createVertexBuffer();
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void  copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	//Буфер вершин
+	VkBuffer vertexBuffer;
+	//Указатель на выделенную память
+	VkDeviceMemory vertexBufferMemory;
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ИНДЕКСОВ ВЕРШИН*/
+	void createIndexBuffer();
+	//Используя uint16_t мы можем позволить себе 65535 вершин
+	const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 0, 3, 7, 7, 4, 0, 3, 2, 6, 6, 7, 3, 2, 1, 5, 5, 6, 2, 0, 4, 5, 5, 1, 0 };
+	//Буффер индексов вершин
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ГЛОБАЛЬНЫХ ВЕРШИН*/
+	//Буффер для глобальных переменных
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	void createUniformBuffers();
+	void updateUniformBuffer(uint32_t currentImage);
 public:
 	Render();
 	~Render();
