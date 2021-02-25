@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Render.h"
+#include "Buffer.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 #include "HelpStructures.h"
@@ -17,6 +18,8 @@ Render::~Render()
 
 	vkDestroyBuffer(device, vertexBuffer, nullptr);
 	vkFreeMemory(device, vertexBufferMemory, nullptr);
+
+	delete vBuffer;
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -999,7 +1002,10 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 
 void Render::createVertexBuffer()
 {
+	vBuffer = new Buffer();
+	vBuffer->initBuffer(this);
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	//VkBuffer tempBuffer = vBuffer->getVkBufferHandle();
 	//Создаём промежуточный буфер в зоне видимости процессора и видиокарты
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
@@ -1012,6 +1018,12 @@ void Render::createVertexBuffer()
 	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, vertices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBufferMemory);
+
+	vBuffer->createBuffer(bufferSize,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	
+	vBuffer->copyBuffer(stagingBuffer, vBuffer->getVkBufferHandle(), bufferSize);
 
 	//Создаём конечный буффер вершин в видиокарте
 	createBuffer(bufferSize,
@@ -1300,7 +1312,7 @@ void Render::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkBuffer vertexBuffers[] = { vBuffer->getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);

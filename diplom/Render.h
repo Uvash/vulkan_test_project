@@ -4,6 +4,7 @@
 
 class DiplomApp;
 class WindowManager;
+class Buffer;
 
 class Render
 {
@@ -127,6 +128,7 @@ private:
 	VkBuffer vertexBuffer;
 	//Указатель на выделенную память
 	VkDeviceMemory vertexBufferMemory;
+	Buffer * vBuffer;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ИНДЕКСОВ ВЕРШИН*/
 	void createIndexBuffer();
 	//Используя uint16_t мы можем позволить себе 65535 вершин
@@ -163,6 +165,8 @@ private:
 
 	void createCommandBuffers();
 	void createSyncObjects();
+
+	friend Buffer;
 public:
 	Render();
 	~Render();
