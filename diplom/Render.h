@@ -121,25 +121,18 @@ private:
 	void createCommandPool(uint32_t familyIndex, VkCommandPool* pool);
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю бепьхм*/
 	void createVertexBuffer();
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-	void  copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	//аСТЕП БЕПЬХМ
-	VkBuffer vertexBuffer;
-	//сЙЮГЮРЕКЭ МЮ БШДЕКЕММСЧ ОЮЛЪРЭ
-	VkDeviceMemory vertexBufferMemory;
-	Buffer * vBuffer;
+	std::shared_ptr<Buffer> vertexBuffer;
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю хмдейянб бепьхм*/
 	void createIndexBuffer();
 	//хЯОНКЭГСЪ uint16_t ЛШ ЛНФЕЛ ОНГБНКХРЭ ЯЕАЕ 65535 БЕПЬХМ
 	const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 0, 3, 7, 7, 4, 0, 3, 2, 6, 6, 7, 3, 2, 1, 5, 5, 6, 2, 0, 4, 5, 5, 1, 0 };
 	//аСТТЕП ХМДЕЙЯНБ БЕПЬХМ
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
+	std::shared_ptr<Buffer> indexBuffer;
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю цкнаюкэмшу бепьхм*/
 	//аСТТЕП ДКЪ ЦКНАЮКЭМШУ ОЕПЕЛЕММШУ
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<std::shared_ptr<Buffer>> uniformBuffers;
+
 	void createUniformBuffers();
 	void updateUniformBuffer(uint32_t currentImage);
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ оскю деяйпхорнпю*/

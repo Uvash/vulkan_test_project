@@ -21,5 +21,6 @@
 #include <cstring>
 #include <cstdint> // Necessary for UINT32_MAX
 #include <fstream>
+#include <memory>
 #include <optional>
 #include <set>

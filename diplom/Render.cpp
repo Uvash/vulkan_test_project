@@ -13,13 +13,9 @@ Render::~Render()
 {
 	cleanupSwapChain();
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-	vkDestroyBuffer(device, indexBuffer, nullptr);
-	vkFreeMemory(device, indexBufferMemory, nullptr);
 
-	vkDestroyBuffer(device, vertexBuffer, nullptr);
-	vkFreeMemory(device, vertexBufferMemory, nullptr);
-
-	delete vBuffer;
+	indexBuffer.reset();
+	vertexBuffer.reset();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -569,8 +565,7 @@ void Render::cleanupSwapChain()
 
 	for (size_t i = 0; i < swapChainImages.size(); i++)
 	{
-		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+		uniformBuffers[i].reset();
 	}
 
 	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -1002,177 +997,57 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 
 void Render::createVertexBuffer()
 {
-	vBuffer = new Buffer();
-	vBuffer->initBuffer(this);
+
+	vertexBuffer = std::make_shared<Buffer>();
+	vertexBuffer->initBuffer(this);
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-	//VkBuffer tempBuffer = vBuffer->getVkBufferHandle();
+
 	//Создаём промежуточный буфер в зоне видимости процессора и видиокарты
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(bufferSize,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer, stagingBufferMemory);
+	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
+	stagingBuffer->initBuffer(this);
+
+	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	//Размечаем данные и копируем сырой массив в буффер
 	void* data;
-	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(device, stagingBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
 	memcpy(data, vertices.data(), (size_t)bufferSize);
-	vkUnmapMemory(device, stagingBufferMemory);
-
-	vBuffer->createBuffer(bufferSize,
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-	
-	vBuffer->copyBuffer(stagingBuffer, vBuffer->getVkBufferHandle(), bufferSize);
+	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
 
 	//Создаём конечный буффер вершин в видиокарте
-	createBuffer(bufferSize,
+	vertexBuffer->createBuffer(bufferSize,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		vertexBuffer,
-		vertexBufferMemory);
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	//Копируем
-	copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-	//Чистим вспомогательный буффер
-	vkDestroyBuffer(device, stagingBuffer, nullptr);
-	vkFreeMemory(device, stagingBufferMemory, nullptr);
-}
+	vertexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), vertexBuffer->getVkBufferHandle(), bufferSize);
 
-/*
- *@brief вспомогательная функция для создания буффера и выделения для него памяти
- *
- *@param size размер буффера в байтах
- *@param usage флаги описывающие с чем может работать буффер
- *@param properties дополнительные параметры памяти под буффер
- *@param buffer хендл буффера
- *@param bufferMemory хендл под выделяемую память
- *@return создаёт буффер и выделяет под него память
- */
-void Render::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
-{
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	//Создаём буффер
-	if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create buffer!");
-	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-	//Выделяем память
-	if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate buffer memory!");
-	}
-
-	vkBindBufferMemory(device, buffer, bufferMemory, 0);
-
-}
-
-/*
- *@brief Определяет наиболее оптимальный тип памяти для наших запросов
- *
- *@param typeFilter тип необходимой памяти
- *@param properties дополнительные параметры этой памяти
- *@return оптимальный тип памяти
- */
-uint32_t  Render::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-	{
-		if ((typeFilter & (1 << i)) &&
-			(memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-		{
-			return i;
-		}
-	}
-	throw std::runtime_error("failed to find suitable memory type!");
-}
-/*
- *@brief Функция копирования буфферов
- *
- *@param srcBuffer	буффер источник
- *@param dstBuffer	буффер приёмник
- *@param size		размер копируемой области
- *@return
- */
-void  Render::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
-{
-	//Создаём командный буффер
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = transfertСommandPool;
-	allocInfo.commandBufferCount = 1;
-
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; //Предупреждаем что будем пользовать один раз
-	//Записываем в него команду копирования
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-	VkBufferCopy copyRegion{};
-	copyRegion.srcOffset = 0; // Optional
-	copyRegion.dstOffset = 0; // Optional
-	copyRegion.size = size;
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-	vkEndCommandBuffer(commandBuffer);
-
-	//Отправляем на выполнение
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-
-	vkQueueSubmit(transfertQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	//Дожидаемся выполнения
-	vkQueueWaitIdle(transfertQueue);
-
-	vkFreeCommandBuffers(device, transfertСommandPool, 1, &commandBuffer);
 }
 
 void Render::createIndexBuffer()
 {
+	indexBuffer = std::make_shared<Buffer>();
+	indexBuffer->initBuffer(this);
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
+	stagingBuffer->initBuffer(this);
+	
+	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-		stagingBufferMemory);
+		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	void* data;
-	vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(device, stagingBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
 	memcpy(data, indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(device, stagingBufferMemory);
+	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+	indexBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer,
-		indexBufferMemory);
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), bufferSize);
 
-	vkDestroyBuffer(device, stagingBuffer, nullptr);
-	vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
 void Render::createUniformBuffers()
@@ -1180,14 +1055,14 @@ void Render::createUniformBuffers()
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(swapChainImages.size());
-	uniformBuffersMemory.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++)
 	{
-		createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		uniformBuffers[i] = std::make_shared<Buffer>();
+		uniformBuffers[i]->initBuffer(this);
+		uniformBuffers[i]->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i],
-			uniformBuffersMemory[i]);
+			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
 }
 
@@ -1209,9 +1084,9 @@ void Render::updateUniformBuffer(uint32_t currentImage)
 	ubo.proj[1][1] *= -1;
 	//Пишем переносим временный буфер в глобальный буфер кадра
 	void* data;
-	vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+	vkMapMemory(device, uniformBuffers[currentImage]->getVkMemoryHandle(), 0, sizeof(ubo), 0, &data);
 	memcpy(data, &ubo, sizeof(ubo));
-	vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
+	vkUnmapMemory(device, uniformBuffers[currentImage]->getVkMemoryHandle());
 }
 
 void Render::createDescriptorPool()
@@ -1252,7 +1127,7 @@ void Render::createDescriptorSets()
 	for (size_t i = 0; i < swapChainImages.size(); i++)
 	{
 		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
+		bufferInfo.buffer = uniformBuffers[i]->getVkBufferHandle();
 		bufferInfo.offset = 0;
 		bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -1312,10 +1187,10 @@ void Render::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-		VkBuffer vertexBuffers[] = { vBuffer->getVkBufferHandle() };
+		VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
