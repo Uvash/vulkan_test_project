@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Исходные файлы\Buffer">
+      <UniqueIdentifier>{517c8868-ad7e-4d55-9ec7-a0bb3da442de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\Buffer">
+      <UniqueIdentifier>{a0d47045-eb3d-4c09-80d3-7e5587612c8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -31,7 +37,10 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Buffer.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Исходные файлы\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="ExpandBuffer.cpp">
+      <Filter>Исходные файлы\Buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +60,10 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Buffer.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>Файлы заголовков\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="ExpandBuffer.h">
+      <Filter>Файлы заголовков\Buffer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

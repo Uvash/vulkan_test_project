@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Render.h"
 #include "Buffer.h"
+#include "ExpandBuffer.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 #include "HelpStructures.h"
@@ -1026,14 +1027,14 @@ void Render::createVertexBuffer()
 
 void Render::createIndexBuffer()
 {
-	indexBuffer = std::make_shared<Buffer>();
+	indexBuffer = std::make_shared<ExpandBuffer>();
 	indexBuffer->initBuffer(this);
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
+	std::shared_ptr<ExpandBuffer> stagingBuffer = std::make_shared<ExpandBuffer>();
 	stagingBuffer->initBuffer(this);
 	
-	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT ,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -1042,12 +1043,38 @@ void Render::createIndexBuffer()
 	memcpy(data, indices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
 
+
+	//---------------------------------------------------------------------------------------------
+	VkDeviceSize addishinalBufferSize = sizeof(indices2[0]) * indices2.size();
+	
+	std::shared_ptr<Buffer> stagingBuffer2 = std::make_shared<Buffer>();
+	stagingBuffer2->initBuffer(this);
+
+	stagingBuffer2->createBuffer(addishinalBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	void* data2;
+	vkMapMemory(device, stagingBuffer2->getVkMemoryHandle(), 0, addishinalBufferSize, 0, &data2);
+	memcpy(data2, indices.data(), (size_t)addishinalBufferSize);
+	vkUnmapMemory(device, stagingBuffer2->getVkMemoryHandle());
+
+	stagingBuffer->expand(stagingBuffer2.get());
+
+	void* data3;
+	std::vector<uint16_t> result;
+	result.resize(stagingBuffer->getBufferSize() / 2);
+	vkMapMemory(device, stagingBuffer->getVkMemoryHandle(), 0, stagingBuffer->getBufferSize(), 0, &data3);
+	memcpy(result.data(), data3, stagingBuffer->getBufferSize());
+	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
+
+	//-----------------------------------------------------------------------------------------------
 	indexBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), bufferSize);
-
+	
 }
 
 void Render::createUniformBuffers()
