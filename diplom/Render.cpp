@@ -1034,7 +1034,7 @@ void Render::createIndexBuffer()
 	std::shared_ptr<ExpandBuffer> stagingBuffer = std::make_shared<ExpandBuffer>();
 	stagingBuffer->initBuffer(this);
 	
-	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT ,
+	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -1045,36 +1045,28 @@ void Render::createIndexBuffer()
 
 
 	//---------------------------------------------------------------------------------------------
-	VkDeviceSize addishinalBufferSize = sizeof(indices2[0]) * indices2.size();
+	VkDeviceSize bufferSize2 = sizeof(indices2[0]) * indices2.size();
 	
 	std::shared_ptr<Buffer> stagingBuffer2 = std::make_shared<Buffer>();
 	stagingBuffer2->initBuffer(this);
 
-	stagingBuffer2->createBuffer(addishinalBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	stagingBuffer2->createBuffer(bufferSize2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	void* data2;
-	vkMapMemory(device, stagingBuffer2->getVkMemoryHandle(), 0, addishinalBufferSize, 0, &data2);
-	memcpy(data2, indices.data(), (size_t)addishinalBufferSize);
+	vkMapMemory(device, stagingBuffer2->getVkMemoryHandle(), 0, bufferSize2, 0, &data2);
+	memcpy(data2, indices2.data(), (size_t)bufferSize2);
 	vkUnmapMemory(device, stagingBuffer2->getVkMemoryHandle());
 
 	stagingBuffer->expand(stagingBuffer2.get());
 
-	void* data3;
-	std::vector<uint16_t> result;
-	result.resize(stagingBuffer->getBufferSize() / 2);
-	vkMapMemory(device, stagingBuffer->getVkMemoryHandle(), 0, stagingBuffer->getBufferSize(), 0, &data3);
-	memcpy(result.data(), data3, stagingBuffer->getBufferSize());
-	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
-
 	//-----------------------------------------------------------------------------------------------
-	indexBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+	indexBuffer->createBuffer(stagingBuffer->getBufferSize(), VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), bufferSize);
-	
+	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), stagingBuffer->getBufferSize());
 }
 
 void Render::createUniformBuffers()
@@ -1220,7 +1212,7 @@ void Render::createCommandBuffers()
 		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indexBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
