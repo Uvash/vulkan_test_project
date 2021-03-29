@@ -11,7 +11,7 @@ ExpandBuffer::~ExpandBuffer()
 void ExpandBuffer::allocMemory(VkDeviceSize size, VkMemoryPropertyFlags properties)
 {
 
-	realMemorySize = size * 2;
+	realMemorySize = size * 16;
 	Buffer::allocMemory(realMemorySize, properties);
 }
 

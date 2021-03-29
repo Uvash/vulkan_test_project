@@ -104,8 +104,8 @@ void  Buffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize si
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffer;
 
-
 	vkQueueSubmit(render->transfertQueue, 1, &submitInfo, VK_NULL_HANDLE);
+
 	//Дожидаемся выполнения
 	vkQueueWaitIdle(render->transfertQueue);
 

@@ -16,6 +16,7 @@ Render::~Render()
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
 	indexBuffer.reset();
+	swapForIndexBuffer.reset();
 	vertexBuffer.reset();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -987,7 +988,7 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolInfo.queueFamilyIndex = familyIndex; //Указываем в какую очередь мы будем слать команды
-	poolInfo.flags = 0; // Optional
+	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; // Optional
 
 	if (vkCreateCommandPool(device, &poolInfo, nullptr, pool) != VK_SUCCESS)
 	{
@@ -1067,6 +1068,13 @@ void Render::createIndexBuffer()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), stagingBuffer->getBufferSize());
+
+	swapForIndexBuffer = std::make_shared<Buffer>();
+	swapForIndexBuffer->initBuffer(this);
+	swapForIndexBuffer->createBuffer(bufferSize2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
 }
 
 void Render::createUniformBuffers()
@@ -1166,6 +1174,46 @@ void Render::createDescriptorSets()
 	}
 }
 
+void Render::expandVertexBuffer()
+{
+	Render* h = this;
+	static auto startTime = std::chrono::high_resolution_clock::now();
+	static auto lastTime = startTime;
+	static int rawOffset = 6;
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+	float lastPeriod = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
+
+	if (lastPeriod > 0.5f)
+	{
+		if (rawOffset >= raw_indices.size())
+		{
+			return;
+		}
+		//КОСТЫЛЬ Перевести на систему событий
+		vkQueueWaitIdle(graphicsQueue);
+		std::cout << time << std::endl;
+		lastTime = currentTime;
+
+		std::vector<uint16_t> poligon{0,0,0};
+		std::vector<uint16_t>::iterator iter = raw_indices.begin() + rawOffset;
+		std::copy(iter, iter + 3, poligon.begin());
+		rawOffset += 3;
+		std::cout << poligon[0] << " " << poligon[1] << " " << poligon[2] << std::endl;
+		
+		VkDeviceSize bufferSize = sizeof(indices2[0]) * poligon.size();	
+
+		void* data;
+		vkMapMemory(device, swapForIndexBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
+		memcpy(data, poligon.data(), (size_t)bufferSize);
+		vkUnmapMemory(device, swapForIndexBuffer->getVkMemoryHandle());
+
+		indexBuffer->expand(swapForIndexBuffer.get());
+	}
+
+
+}
+
 void Render::createCommandBuffers()
 {
 	commandBuffers.resize(swapChainFramebuffers.size());
@@ -1224,6 +1272,49 @@ void Render::createCommandBuffers()
 
 }
 
+void Render::recreateCommandBuffers(int bufferNumber)
+{
+	//Очищаем командный буфер
+	vkResetCommandBuffer(commandBuffers[bufferNumber], 0);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0; // Optional
+	beginInfo.pInheritanceInfo = nullptr; // Optional
+
+	if (vkBeginCommandBuffer(commandBuffers[bufferNumber], &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer!");
+	}
+
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = renderPass;
+	renderPassInfo.framebuffer = swapChainFramebuffers[bufferNumber];
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = swapChainExtent;
+	VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+	renderPassInfo.clearValueCount = 1;
+	renderPassInfo.pClearValues = &clearColor;
+
+	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
+	vkCmdBindIndexBuffer(commandBuffers[bufferNumber], indexBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
+
+	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
+	vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(indexBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
+
+	if (vkEndCommandBuffer(commandBuffers[bufferNumber]) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to record command buffer!");
+	}
+
+}
 void Render::createSyncObjects()
 {
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1254,10 +1345,9 @@ void Render::drawFrame()
 	//Ждём ограждение
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-
 	//Получаем изображение
 	uint32_t imageIndex;
-	//3-й параметр задержка в наносекундах UINT64_MAX - отклчает таймер
+	//3-й параметр задержка в наносекундах UINT64_MAX - отклчает таймер уводя в бесконечность
 	VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	//Если во время выполнения получили ошибку, пытаемся её обработать
@@ -1276,9 +1366,12 @@ void Render::drawFrame()
 	{
 		vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 	}
+
 	// Mark the image as now being in use by this frame
 	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-
+	
+	expandVertexBuffer();
+	recreateCommandBuffers(currentFrame);
 	updateUniformBuffer(imageIndex);
 
 	VkSubmitInfo submitInfo{};
@@ -1298,6 +1391,7 @@ void Render::drawFrame()
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
 	vkResetFences(device, 1, &inFlightFences[currentFrame]);
+
 	//Шлём на выполнение
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 	{
