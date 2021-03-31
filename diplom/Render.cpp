@@ -1176,7 +1176,6 @@ void Render::createDescriptorSets()
 
 void Render::expandVertexBuffer()
 {
-	Render* h = this;
 	static auto startTime = std::chrono::high_resolution_clock::now();
 	static auto lastTime = startTime;
 	static int rawOffset = 6;
@@ -1371,7 +1370,7 @@ void Render::drawFrame()
 	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 	
 	expandVertexBuffer();
-	recreateCommandBuffers(currentFrame);
+	recreateCommandBuffers(imageIndex);
 	updateUniformBuffer(imageIndex);
 
 	VkSubmitInfo submitInfo{};
