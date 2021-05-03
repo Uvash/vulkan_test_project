@@ -164,6 +164,7 @@
     <ClCompile Include="ExpandBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
+    <ClCompile Include="RungeKutte2d.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="ExpandBuffer.h" />
     <ClInclude Include="HelpStructures.h" />
     <ClInclude Include="Render.h" />
+    <ClInclude Include="RungeKutte2d.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>

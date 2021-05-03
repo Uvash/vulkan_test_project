@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "RungeKutte2d.h"
 #include "WindowManager.h"
 #include "Render.h"
 
@@ -7,6 +8,7 @@ class DiplomApp
 {
 
 private:
+	RungeKutte2d rk2d;
 	WindowManager whindow;
 	Render render;
 

@@ -3,6 +3,8 @@
 
 void DiplomApp::init()
 {
+	rk2d.changePosition({ 1, 0, 0 });
+	rk2d.setH(0.01);
 	whindow.windowManagerInit(this);
 	render.RenderInit(this, &whindow);
 }
@@ -14,6 +16,7 @@ void DiplomApp::mainLoop()
 	{
 		whindow.pollEvents();
 		render.drawFrame();
+		rk2d.step();
 	}
 	render.idleDevice();
 }

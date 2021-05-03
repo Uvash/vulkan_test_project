@@ -42,6 +42,9 @@
     <ClCompile Include="ExpandBuffer.cpp">
       <Filter>Исходные файлы\Buffer</Filter>
     </ClCompile>
+    <ClCompile Include="RungeKutte2d.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -64,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="ExpandBuffer.h">
       <Filter>Файлы заголовков\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="RungeKutte2d.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
