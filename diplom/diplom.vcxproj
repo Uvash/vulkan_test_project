@@ -160,8 +160,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="ComplexBuffer.cpp" />
     <ClCompile Include="DiplomApp.cpp" />
-    <ClCompile Include="ExpandBuffer.cpp" />
+    <ClCompile Include="ExpandBufferDeque.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="RungeKutte2d.cpp" />
@@ -170,8 +171,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="ComplexBuffer.h" />
     <ClInclude Include="DiplomApp.h" />
-    <ClInclude Include="ExpandBuffer.h" />
+    <ClInclude Include="ExpandBufferDeque.h" />
     <ClInclude Include="HelpStructures.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="RungeKutte2d.h" />

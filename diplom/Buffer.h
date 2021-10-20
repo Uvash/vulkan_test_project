@@ -17,7 +17,7 @@ protected:
 
 
 	virtual void allocBuffer(VkDeviceSize size, VkBufferUsageFlags usage);
-	virtual void allocMemory(VkDeviceSize size, VkMemoryPropertyFlags properties);
+	virtual void allocMemory(VkMemoryPropertyFlags properties);
 	void deallocBuffer();
 	void deallocMemory();
 	void bindMemory();

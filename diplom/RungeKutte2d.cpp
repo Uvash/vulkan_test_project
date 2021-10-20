@@ -39,6 +39,12 @@ glm::vec3 RungeKutte2d::calculateNewValue()
 }
 void RungeKutte2d::step()
 {
+	if (result.size() > 1)
+	{
+		glm::vec3 last = result.back();
+		if (last.x > 10 || last.y > 10)
+			return;
+	}
 	glm::vec3 newValue = calculateNewValue();
 	currentPosition = newValue;
 	result.push_back(newValue);

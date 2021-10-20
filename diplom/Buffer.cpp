@@ -36,7 +36,7 @@ void Buffer::initBuffer(Render* new_render)
 void Buffer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
 	allocBuffer(size, usage);
-	allocMemory(size, properties);
+	allocMemory(properties);
 	bindMemory();
 }
 
@@ -128,7 +128,7 @@ void Buffer::allocBuffer(VkDeviceSize size, VkBufferUsageFlags usage)
 	}
 }
 
-void  Buffer::allocMemory(VkDeviceSize size, VkMemoryPropertyFlags properties)
+void  Buffer::allocMemory(VkMemoryPropertyFlags properties)
 {
 	bufferMemoryFlags = properties;
 	VkMemoryRequirements memRequirements;

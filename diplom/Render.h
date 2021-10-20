@@ -5,7 +5,7 @@
 class DiplomApp;
 class WindowManager;
 class Buffer;
-class ExpandBuffer;
+class ExpandBufferDeque;
 
 class Render
 {
@@ -131,7 +131,7 @@ private:
 	const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 	const std::vector<uint16_t> indices2 = { 4, 5, 6, 6, 7, 4};
 	//Буффер индексов вершин
-	std::shared_ptr<ExpandBuffer> indexBuffer;
+	std::shared_ptr<ExpandBufferDeque> indexBuffer;
 	std::shared_ptr<Buffer> swapForIndexBuffer;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ГЛОБАЛЬНЫХ ВЕРШИН*/
 	//Буффер для глобальных переменных

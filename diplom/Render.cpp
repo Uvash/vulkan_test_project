@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Render.h"
 #include "Buffer.h"
-#include "ExpandBuffer.h"
+#include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 #include "HelpStructures.h"
@@ -1028,11 +1028,17 @@ void Render::createVertexBuffer()
 
 void Render::createIndexBuffer()
 {
-	indexBuffer = std::make_shared<ExpandBuffer>();
+	indexBuffer = std::make_shared<ExpandBufferDeque>();
+	indexBuffer->setHotBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+												VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	indexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
 	indexBuffer->initBuffer(this);
+	indexBuffer->createBuffer(sizeof(indices[0]) * 16);
+
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-	std::shared_ptr<ExpandBuffer> stagingBuffer = std::make_shared<ExpandBuffer>();
+	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
 	stagingBuffer->initBuffer(this);
 	
 	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -1060,15 +1066,10 @@ void Render::createIndexBuffer()
 	memcpy(data2, indices2.data(), (size_t)bufferSize2);
 	vkUnmapMemory(device, stagingBuffer2->getVkMemoryHandle());
 
-	stagingBuffer->expand(stagingBuffer2.get());
-
 	//-----------------------------------------------------------------------------------------------
-	indexBuffer->createBuffer(stagingBuffer->getBufferSize(), VK_BUFFER_USAGE_TRANSFER_DST_BIT |
-		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	indexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), indexBuffer->getVkBufferHandle(), stagingBuffer->getBufferSize());
-
+	indexBuffer->addBuffer(stagingBuffer.get());
+	indexBuffer->addBuffer(stagingBuffer2.get());
+	
 	swapForIndexBuffer = std::make_shared<Buffer>();
 	swapForIndexBuffer->initBuffer(this);
 	swapForIndexBuffer->createBuffer(bufferSize2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -1207,7 +1208,7 @@ void Render::expandVertexBuffer()
 		memcpy(data, poligon.data(), (size_t)bufferSize);
 		vkUnmapMemory(device, swapForIndexBuffer->getVkMemoryHandle());
 
-		indexBuffer->expand(swapForIndexBuffer.get());
+		indexBuffer->addBuffer(swapForIndexBuffer.get());
 	}
 
 
@@ -1256,10 +1257,10 @@ void Render::createCommandBuffers()
 		VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer->hotBuffer.getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
 
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indexBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indexBuffer->hotBuffer.getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
@@ -1302,10 +1303,17 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffers[bufferNumber], indexBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
 
+	for (auto coldBuffer : indexBuffer->coldBuffers)
+	{
+		vkCmdBindIndexBuffer(commandBuffers[bufferNumber], coldBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
+		vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+	}
+	vkCmdBindIndexBuffer(commandBuffers[bufferNumber], indexBuffer->hotBuffer.getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(indexBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(indexBuffer->hotBuffer.getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+
 	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
 
 	if (vkEndCommandBuffer(commandBuffers[bufferNumber]) != VK_SUCCESS)
