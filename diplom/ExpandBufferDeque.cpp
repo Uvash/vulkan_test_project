@@ -42,7 +42,7 @@ void ExpandBufferDeque::createBuffer(VkDeviceSize size)
 
 void ExpandBufferDeque::sendHotBufferToColdBuffers()
 {
-	std::cout << "ExpandBufferDeque start addBuffer cold storage size:" << coldBuffers.size() << std::endl;
+	std::cout << "ExpandBufferDeque start addBuffer cold storage size:" << coldBuffers.size() << " " << hotBuffer.getBufferSize() << std::endl;
 	Buffer* localBuffer = new Buffer();
 	localBuffer->initBuffer(render);
 	localBuffer->createBuffer(hotBuffer.getUsingMemorySize(), hotBufferFlags, hotMemRequirements);

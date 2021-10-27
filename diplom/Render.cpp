@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "Render.h"
+#include "renderHelp/ShaderLoader.h"
+#include "renderHelp/StaticStage.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
@@ -15,8 +17,7 @@ Render::~Render()
 	cleanupSwapChain();
 	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
-	indexBuffer.reset();
-	swapForIndexBuffer.reset();
+	swapForVertexBuffer.reset();
 	vertexBuffer.reset();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -38,18 +39,23 @@ Render::~Render()
 	vkDestroyInstance(instance, nullptr); //Уничтожаем экземпляр вулкана
 }
 
-void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager)
+void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod)
 {
-	if (new_app == nullptr)
+	if(!new_app)
 	{
 		throw std::runtime_error("App must be created before create Vulkan");
 	}
-	if (new_windowManager == nullptr)
+	if(!new_windowManager)
+	{
+		throw std::runtime_error("WindowManager must be created before create Vulkan");
+	}
+	if (!newItertionMetod)
 	{
 		throw std::runtime_error("WindowManager must be created before create Vulkan");
 	}
 	app = new_app;
 	windowManager = new_windowManager;
+	itertionMetod = newItertionMetod;
 
 	createInstance();
 	createSurface();
@@ -734,30 +740,9 @@ void Render::createDescriptorSetLayout()
 void Render::createGraphicsPipeline()
 {
 	//После создания графического конвеера мы можем удалять файлы с кодом шейдеров и обёртки над ними
-	//Пытаемся загрузить шейдеры
-	auto vertShaderCode = readFile("shaders/vert.spv");
-	auto fragShaderCode = readFile("shaders/frag.spv");
-	//Подготавливаем шейдеры для работы
-	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
-
-	VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-	//Указываем какой тип шейдера и на каком этапе графического конвеера будет использован.
-	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	//Указываем название модуля и точку входа
-	vertShaderStageInfo.module = vertShaderModule;
-	vertShaderStageInfo.pName = "main";
-
-	//Повторяем процедуру для фрагментного шейдера
-	VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = fragShaderModule;
-	fragShaderStageInfo.pName = "main";
-
-	//Загружаем шейдеры в структуру
-	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+	renderHelp::ShaderStages shader;
+	shader.init(&device);
+	shader.createStagingBuffer();
 
 	//Узнаём откуда что читаем
 	auto bindingDescription = Vertex::getBindingDescription();
@@ -775,81 +760,11 @@ void Render::createGraphicsPipeline()
 	//Описываем что именно пытаються изобразить вершины
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	//inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-	//Указываем область вывода
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)swapChainExtent.width;
-	viewport.height = (float)swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-
-	//Указываем область в которой изображение будет обрезано
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = swapChainExtent;
-
-	//Объединяем область вывода и область обрезания
-	VkPipelineViewportStateCreateInfo viewportState{};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.pViewports = &viewport;
-	viewportState.scissorCount = 1;
-	viewportState.pScissors = &scissor;
-
-	//Подключаем стадию растенизации
-	VkPipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.depthClampEnable = VK_FALSE;
-	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	//Определяет как будут заполняться полигоны. Нам нужна заливка
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	//Описываем ширину линий
-	rasterizer.lineWidth = 1.0f;
-
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rasterizer.depthBiasEnable = VK_FALSE;
-	rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-	rasterizer.depthBiasClamp = 0.0f; // Optional
-	rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-	//Определяем мультисемплинг и отключаем его
-	VkPipelineMultisampleStateCreateInfo multisampling{};
-	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = VK_FALSE;
-	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-	multisampling.minSampleShading = 1.0f; // Optional
-	multisampling.pSampleMask = nullptr; // Optional
-	multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-	multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
-	//Стадия смешивания цветов
-	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT |
-		VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
-		VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_TRUE;
-	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
-	VkPipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.logicOpEnable = VK_FALSE;
-	colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
-	colorBlending.attachmentCount = 1;
-	colorBlending.pAttachments = &colorBlendAttachment;
-	colorBlending.blendConstants[0] = 0.0f; // Optional
-	colorBlending.blendConstants[1] = 0.0f; // Optional
-	colorBlending.blendConstants[2] = 0.0f; // Optional
-	colorBlending.blendConstants[3] = 0.0f; // Optional
+	
+	renderHelp::StaticStage staticStage(&swapChainExtent);
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -867,16 +782,17 @@ void Render::createGraphicsPipeline()
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	//Включаем шейдеры
-	pipelineInfo.stageCount = 2;
-	pipelineInfo.pStages = shaderStages;
+	pipelineInfo.stageCount = shader.shaderStages.size();
+	pipelineInfo.pStages = shader.shaderStages.data();
+
 	//Включаем описание фиксированных стадий
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pInputAssemblyState = &inputAssembly;
-	pipelineInfo.pViewportState = &viewportState;
-	pipelineInfo.pRasterizationState = &rasterizer;
-	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pViewportState = &staticStage.viewportState;
+	pipelineInfo.pRasterizationState = &staticStage.rasterizer;
+	pipelineInfo.pMultisampleState = &staticStage.multisampling;
 	pipelineInfo.pDepthStencilState = nullptr; // Optional
-	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.pColorBlendState = &staticStage.colorBlending;
 	pipelineInfo.pDynamicState = nullptr; // Optional
 	//Подключаем информацию глобальных переменных
 	pipelineInfo.layout = pipelineLayout;
@@ -887,58 +803,13 @@ void Render::createGraphicsPipeline()
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 
+	
 	//Создаём конвеер
 	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
 
-	//Удаляем обёртку из памяти
-	vkDestroyShaderModule(device, fragShaderModule, nullptr);
-	vkDestroyShaderModule(device, vertShaderModule, nullptr);
-}
-
-std::vector<char> Render::readFile(const std::string& filename)
-{
-	//Читаем с конца и как бинарный файл (что бы не было ошибок)
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-	//Поскольку читаем с конца, мы узнаём размер файла, и выделяем под него память
-	size_t fileSize = (size_t)file.tellg();
-	std::vector<char> buffer(fileSize);
-	//Возвращаемся в начало и начинаем чтение
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-	//Закрываем файл
-	file.close();
-	return buffer;
-}
-
-/*
- *@brief конвертирует бинарный код шейдера в объект вулкана
- *
- *@param code бинарный код шейдера
- *@return готовый шейдер воспринимаемый вулканом
- */
-VkShaderModule Render::createShaderModule(const std::vector<char>& code)
-{
-	//Создаём структуру модуля
-	VkShaderModuleCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-	//Пытаемся создать обёртку
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create shader module!");
-	}
-
-	return shaderModule;
 }
 
 void Render::createFramebuffers()
@@ -1000,11 +871,17 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 void Render::createVertexBuffer()
 {
 
-	vertexBuffer = std::make_shared<Buffer>();
+	vertexBuffer = std::make_shared<ExpandBufferDeque>();
+
+	vertexBuffer->setHotBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	vertexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
 	vertexBuffer->initBuffer(this);
-	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+	vertexBuffer->createBuffer(sizeof(vertices[0]) * 1024);
 
 	//Создаём промежуточный буфер в зоне видимости процессора и видиокарты
+	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
 	stagingBuffer->initBuffer(this);
 
@@ -1017,64 +894,18 @@ void Render::createVertexBuffer()
 	memcpy(data, vertices.data(), (size_t)bufferSize);
 	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
 
-	//Создаём конечный буффер вершин в видиокарте
-	vertexBuffer->createBuffer(bufferSize,
-		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	//Копируем
-	vertexBuffer->copyBuffer(stagingBuffer->getVkBufferHandle(), vertexBuffer->getVkBufferHandle(), bufferSize);
+	vertexBuffer->addBuffer(stagingBuffer.get());
 
+	swapForVertexBuffer = std::make_shared<Buffer>();
+	swapForVertexBuffer->initBuffer(this);
+	swapForVertexBuffer->createBuffer(sizeof(itertionMetod->result[0]) * 2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 void Render::createIndexBuffer()
 {
-	indexBuffer = std::make_shared<ExpandBufferDeque>();
-	indexBuffer->setHotBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-												VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	indexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	indexBuffer->initBuffer(this);
-	indexBuffer->createBuffer(sizeof(indices[0]) * 16);
-
-	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-	std::shared_ptr<Buffer> stagingBuffer = std::make_shared<Buffer>();
-	stagingBuffer->initBuffer(this);
-	
-	stagingBuffer->createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	void* data;
-	vkMapMemory(device, stagingBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
-	memcpy(data, indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(device, stagingBuffer->getVkMemoryHandle());
-
-
-	//---------------------------------------------------------------------------------------------
-	VkDeviceSize bufferSize2 = sizeof(indices2[0]) * indices2.size();
-	
-	std::shared_ptr<Buffer> stagingBuffer2 = std::make_shared<Buffer>();
-	stagingBuffer2->initBuffer(this);
-
-	stagingBuffer2->createBuffer(bufferSize2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	void* data2;
-	vkMapMemory(device, stagingBuffer2->getVkMemoryHandle(), 0, bufferSize2, 0, &data2);
-	memcpy(data2, indices2.data(), (size_t)bufferSize2);
-	vkUnmapMemory(device, stagingBuffer2->getVkMemoryHandle());
-
-	//-----------------------------------------------------------------------------------------------
-	indexBuffer->addBuffer(stagingBuffer.get());
-	indexBuffer->addBuffer(stagingBuffer2.get());
-	
-	swapForIndexBuffer = std::make_shared<Buffer>();
-	swapForIndexBuffer->initBuffer(this);
-	swapForIndexBuffer->createBuffer(bufferSize2, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 }
 
@@ -1102,12 +933,12 @@ void Render::updateUniformBuffer(uint32_t currentImage)
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	//Изменяем временный буфер для кадра в зависимости от времени
 	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f));
+	//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+	ubo.proj = glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
 
 	ubo.proj[1][1] *= -1;
 	//Пишем переносим временный буфер в глобальный буфер кадра
@@ -1186,29 +1017,18 @@ void Render::expandVertexBuffer()
 
 	if (lastPeriod > 0.5f)
 	{
-		if (rawOffset >= raw_indices.size())
-		{
-			return;
-		}
 		//КОСТЫЛЬ Перевести на систему событий
 		vkQueueWaitIdle(graphicsQueue);
-		std::cout << time << std::endl;
-		lastTime = currentTime;
 
-		std::vector<uint16_t> poligon{0,0,0};
-		std::vector<uint16_t>::iterator iter = raw_indices.begin() + rawOffset;
-		std::copy(iter, iter + 3, poligon.begin());
-		rawOffset += 3;
-		std::cout << poligon[0] << " " << poligon[1] << " " << poligon[2] << std::endl;
+		VkDeviceSize bufferSize = sizeof(itertionMetod->result[0]);
 		
-		VkDeviceSize bufferSize = sizeof(indices2[0]) * poligon.size();	
-
 		void* data;
-		vkMapMemory(device, swapForIndexBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
-		memcpy(data, poligon.data(), (size_t)bufferSize);
-		vkUnmapMemory(device, swapForIndexBuffer->getVkMemoryHandle());
+		vkMapMemory(device, swapForVertexBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
+		//memcpy(data, poligon.data(), (size_t)bufferSize);
+		memcpy(data, &(itertionMetod->result.back()), bufferSize);
+		vkUnmapMemory(device, swapForVertexBuffer->getVkMemoryHandle());
 
-		indexBuffer->addBuffer(swapForIndexBuffer.get());
+		vertexBuffer->addBuffer(swapForVertexBuffer.get());
 	}
 
 
@@ -1251,16 +1071,30 @@ void Render::createCommandBuffers()
 		renderPassInfo.clearValueCount = 1;
 		renderPassInfo.pClearValues = &clearColor;
 
+		//Подготовим массивы для передачи данных о вершинах
+		std::vector<VkBuffer> rawVertexBuffer;
+		std::vector<VkDeviceSize> rawVertexOffsets;
+
+		uint32_t vertexCount = 0;
+		for (auto coldBuffer : vertexBuffer->coldBuffers)
+		{
+			vertexCount += static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(glm::vec3));
+			rawVertexBuffer.push_back(coldBuffer->getVkBufferHandle());
+			rawVertexOffsets.push_back(0);
+		}
+		vertexCount += static_cast<uint32_t>(vertexBuffer->hotBuffer.getBufferSize() / sizeof(glm::vec3));
+		rawVertexBuffer.push_back(vertexBuffer->hotBuffer.getVkBufferHandle());
+		rawVertexOffsets.push_back(0);
+
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-		VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
+		VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer->hotBuffer.getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
-
+		vkCmdBindVertexBuffers(commandBuffers[i], 0, static_cast<uint32_t>(rawVertexBuffer.size()), rawVertexBuffer.data(), rawVertexOffsets.data());
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indexBuffer->hotBuffer.getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
+		//vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertexBuffer->hotBuffer.getBufferSize() / sizeof(glm::vec3)), 1, 0, 0);
+		vkCmdDraw(commandBuffers[i], vertexCount, 1, 0, 0);
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
@@ -1297,25 +1131,31 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
 
+	//Подготовим массивы для передачи данных о вершинах
+	std::vector<VkBuffer> rawVertexBuffer;
+	std::vector<VkDeviceSize> rawVertexOffsets;
+	uint32_t vertexCount = 0;
+	for (auto coldBuffer : vertexBuffer->coldBuffers)
+	{
+		vertexCount += static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(glm::vec3));
+		rawVertexBuffer.push_back(coldBuffer->getVkBufferHandle());
+		rawVertexOffsets.push_back(0);
+	}
+	vertexCount += static_cast<uint32_t>(vertexBuffer->hotBuffer.getBufferSize() / sizeof(glm::vec3));
+	rawVertexBuffer.push_back(vertexBuffer->hotBuffer.getVkBufferHandle());
+	rawVertexOffsets.push_back(0);
+
 	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-	VkBuffer vertexBuffers[] = { vertexBuffer->getVkBufferHandle() };
+	VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
 	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
-
-	for (auto coldBuffer : indexBuffer->coldBuffers)
-	{
-		vkCmdBindIndexBuffer(commandBuffers[bufferNumber], coldBuffer->getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
-		vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
-		vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
-	}
-	vkCmdBindIndexBuffer(commandBuffers[bufferNumber], indexBuffer->hotBuffer.getVkBufferHandle(), 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, static_cast<uint32_t>(rawVertexBuffer.size()), rawVertexBuffer.data(), rawVertexOffsets.data());
 	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffers[bufferNumber], static_cast<uint32_t>(indexBuffer->hotBuffer.getBufferSize() / sizeof(uint16_t)), 1, 0, 0, 0);
-
+	vkCmdDraw(commandBuffers[bufferNumber], vertexCount, 1, 0, 0);
+	//закрываем буфер на запись
 	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
-
+	
 	if (vkEndCommandBuffer(commandBuffers[bufferNumber]) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to record command buffer!");

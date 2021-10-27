@@ -19,6 +19,18 @@
     <Filter Include="Файлы заголовков\Buffer">
       <UniqueIdentifier>{a0d47045-eb3d-4c09-80d3-7e5587612c8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\iteratorMetods">
+      <UniqueIdentifier>{768a0fa7-f686-4ea8-9854-12a68d0d14e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\iteratorMetods">
+      <UniqueIdentifier>{bf347647-a2bb-4950-8b6b-79804e727142}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\renderHelp">
+      <UniqueIdentifier>{f9314a44-ee09-414c-890a-6e42c91fdf1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\renderHelp">
+      <UniqueIdentifier>{2fa529b3-a5ae-4746-bea3-802036297bc1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -39,14 +51,23 @@
     <ClCompile Include="Buffer.cpp">
       <Filter>Исходные файлы\Buffer</Filter>
     </ClCompile>
-    <ClCompile Include="RungeKutte2d.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="ExpandBufferDeque.cpp">
       <Filter>Исходные файлы\Buffer</Filter>
     </ClCompile>
     <ClCompile Include="ComplexBuffer.cpp">
       <Filter>Исходные файлы\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="iteratorMetods\AbstractIterationMetod.cpp">
+      <Filter>Исходные файлы\iteratorMetods</Filter>
+    </ClCompile>
+    <ClCompile Include="iteratorMetods\RungeKutte3d.cpp">
+      <Filter>Исходные файлы\iteratorMetods</Filter>
+    </ClCompile>
+    <ClCompile Include="renderHelp\ShaderLoader.cpp">
+      <Filter>Исходные файлы\renderHelp</Filter>
+    </ClCompile>
+    <ClCompile Include="renderHelp\StaticStage.cpp">
+      <Filter>Исходные файлы\renderHelp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,14 +89,23 @@
     <ClInclude Include="Buffer.h">
       <Filter>Файлы заголовков\Buffer</Filter>
     </ClInclude>
-    <ClInclude Include="RungeKutte2d.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="ExpandBufferDeque.h">
       <Filter>Файлы заголовков\Buffer</Filter>
     </ClInclude>
     <ClInclude Include="ComplexBuffer.h">
       <Filter>Файлы заголовков\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="iteratorMetods\AbstractIterationMetod.h">
+      <Filter>Файлы заголовков\iteratorMetods</Filter>
+    </ClInclude>
+    <ClInclude Include="iteratorMetods\RungeKutte3d.h">
+      <Filter>Файлы заголовков\iteratorMetods</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\ShaderLoader.h">
+      <Filter>Файлы заголовков\renderHelp</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\StaticStage.h">
+      <Filter>Файлы заголовков\renderHelp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

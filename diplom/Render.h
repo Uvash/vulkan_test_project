@@ -6,12 +6,14 @@ class DiplomApp;
 class WindowManager;
 class Buffer;
 class ExpandBufferDeque;
+class AbstractItertionMetod;
 
 class Render
 {
 private:
 	DiplomApp* app; //Указатель на наше приложение
 	WindowManager* windowManager; //Указатель на менеджер окон
+	AbstractItertionMetod* itertionMetod;
 
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ВУЛКАН*/
 private:
@@ -91,18 +93,16 @@ private:
 	VkDescriptorSetLayout descriptorSetLayout;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ГРАФИЧЕСКОГО КОНВЕЕРА*/
 	void createGraphicsPipeline();
-	static std::vector<char> readFile(const std::string& filename);
-	VkShaderModule createShaderModule(const std::vector<char>& code);
 
 	const std::vector<Vertex> vertices = {
-	{ {-0.5f, -0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}},
-	{ {0.5f, -0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-	{ {0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}},
-	{ {-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-	{ {-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	{ {0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	{ {0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}},
-	{ {-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
+		{{-0.5f, -0.5f, 0.5f}},
+		{{0.5f, -0.5f, 0.5f}},
+		{{0.5f, 0.5f, 0.5f}},
+		{{-0.5f, 0.5f, 0.5f}},
+		{{-0.5f, -0.5f, -0.5f}},
+		{{0.5f, -0.5f, -0.5f}},
+		{{0.5f, 0.5f, -0.5f}},
+		{{-0.5f, 0.5f, -0.5f}}
 	};
 
 	//Слой для хранения переменных используемых в шейдере локальных переменных (привязанных к вершине)
@@ -123,16 +123,10 @@ private:
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ВЕРШИН*/
 	void createVertexBuffer();
 	//Буфер вершин
-	std::shared_ptr<Buffer> vertexBuffer;
+	std::shared_ptr<ExpandBufferDeque> vertexBuffer;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ИНДЕКСОВ ВЕРШИН*/
 	void createIndexBuffer();
-	//Используя uint16_t мы можем позволить себе 65535 вершин
-	std::vector<uint16_t> raw_indices = { 0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4, 0, 3, 7, 7, 4, 0, 3, 2, 6, 6, 7, 3, 2, 1, 5, 5, 6, 2, 0, 4, 5, 5, 1, 0 };
-	const std::vector<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
-	const std::vector<uint16_t> indices2 = { 4, 5, 6, 6, 7, 4};
-	//Буффер индексов вершин
-	std::shared_ptr<ExpandBufferDeque> indexBuffer;
-	std::shared_ptr<Buffer> swapForIndexBuffer;
+	std::shared_ptr<Buffer> swapForVertexBuffer;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРА ГЛОБАЛЬНЫХ ВЕРШИН*/
 	//Буффер для глобальных переменных
 	std::vector<std::shared_ptr<Buffer>> uniformBuffers;
@@ -169,7 +163,7 @@ private:
 public:
 	Render();
 	~Render();
-	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager);
+	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod);
 	void drawFrame();
 	void idleDevice();
 

@@ -75,12 +75,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -163,9 +165,12 @@
     <ClCompile Include="ComplexBuffer.cpp" />
     <ClCompile Include="DiplomApp.cpp" />
     <ClCompile Include="ExpandBufferDeque.cpp" />
+    <ClCompile Include="iteratorMetods\AbstractIterationMetod.cpp" />
+    <ClCompile Include="iteratorMetods\RungeKutte3d.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
-    <ClCompile Include="RungeKutte2d.cpp" />
+    <ClCompile Include="renderHelp\ShaderLoader.cpp" />
+    <ClCompile Include="renderHelp\StaticStage.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="WindowManager.cpp" />
   </ItemGroup>
@@ -175,8 +180,11 @@
     <ClInclude Include="DiplomApp.h" />
     <ClInclude Include="ExpandBufferDeque.h" />
     <ClInclude Include="HelpStructures.h" />
+    <ClInclude Include="iteratorMetods\AbstractIterationMetod.h" />
+    <ClInclude Include="iteratorMetods\RungeKutte3d.h" />
     <ClInclude Include="Render.h" />
-    <ClInclude Include="RungeKutte2d.h" />
+    <ClInclude Include="renderHelp\ShaderLoader.h" />
+    <ClInclude Include="renderHelp\StaticStage.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="WindowManager.h" />
   </ItemGroup>

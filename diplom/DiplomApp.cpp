@@ -3,10 +3,10 @@
 
 void DiplomApp::init()
 {
-	rk2d.changePosition({ 1, 0, 0 });
-	rk2d.setH(0.01);
+	rk3d.changePosition({ 10, 10, 10 });
+	rk3d.setDelta(0.01);
 	whindow.windowManagerInit(this);
-	render.RenderInit(this, &whindow);
+	render.RenderInit(this, &whindow, &rk3d);
 }
 
 void DiplomApp::mainLoop()
@@ -16,7 +16,7 @@ void DiplomApp::mainLoop()
 	{
 		whindow.pollEvents();
 		render.drawFrame();
-		rk2d.step();
+		rk3d.step();
 	}
 	render.idleDevice();
 }
