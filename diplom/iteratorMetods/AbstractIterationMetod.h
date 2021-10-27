@@ -10,9 +10,11 @@ public:
 	void changePosition(glm::vec3 newPosition);
 	void setTime(float newTime);
 	void setDelta(float delta);
+	inline bool needUpdate() { return update; }
 protected:
 	float delta;
 	float time;
+	bool update;
 	glm::vec3 currentPosition;
 	//Функция определяемая движение точки 
 	virtual float f(glm::vec3 currentPoint, float currentTime) = 0; // по оси х

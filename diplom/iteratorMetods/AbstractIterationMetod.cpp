@@ -5,6 +5,7 @@
 void AbstractItertionMetod::changePosition(glm::vec3 newPosition)
 {
 	currentPosition = newPosition;
+	result.push_back(currentPosition);
 }
 
 void AbstractItertionMetod::setDelta(float newDelta)

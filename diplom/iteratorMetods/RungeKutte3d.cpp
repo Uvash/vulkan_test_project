@@ -4,7 +4,8 @@
 
 void RungeKutte3d::step()
 {
-	if (result.size() > 10)
+	update = false;
+	if (result.size() > 100000)
 	{
 		return;
 	}
@@ -17,8 +18,9 @@ void RungeKutte3d::step()
 	glm::vec3 newValue = calculateNewValue();
 	currentPosition = newValue;
 	result.push_back(newValue);
-
-	std::cout << "x: " << newValue.x << " y: " << newValue.y << " z: " << newValue.z << " time: " << time << std::endl;
+	update = true;
+	
+	//std::cout << "x: " << newValue.x << " y: " << newValue.y << " z: " << newValue.z << " time: " << time << std::endl;
 }
 
 float RungeKutte3d::f(glm::vec3 currentPoint, float currentTime)
@@ -28,7 +30,7 @@ float RungeKutte3d::f(glm::vec3 currentPoint, float currentTime)
 
 float RungeKutte3d::g(glm::vec3 currentPoint, float currentTime)
 {
-	return currentPoint.x * (28.0 - currentPoint.z) - currentPoint.y;
+	return currentPoint.x * (28.0f - currentPoint.z) - currentPoint.y;
 }
 
 float RungeKutte3d::h(glm::vec3 currentPoint, float currentTime)
@@ -64,6 +66,8 @@ glm::vec3 RungeKutte3d::calculateNewValue()
 	result.x = currentPosition.x + (k1.x + k2.x * 2.0f + k3.x * 2.0f + k4.x) / 6.0f;
 	result.y = currentPosition.y + (k1.y + k2.y * 2.0f + k3.y * 2.0f + k4.y) / 6.0f;
 	result.z = currentPosition.z + (k1.z + k2.z * 2.0f + k3.z * 2.0f + k4.z) / 6.0f;
+
+	time += delta;
 
 	return result;
 }
