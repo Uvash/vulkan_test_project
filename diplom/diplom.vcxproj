@@ -162,6 +162,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ComplexBuffer.cpp" />
     <ClCompile Include="DiplomApp.cpp" />
     <ClCompile Include="ExpandBufferDeque.cpp" />
@@ -176,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ComplexBuffer.h" />
     <ClInclude Include="DiplomApp.h" />
     <ClInclude Include="ExpandBufferDeque.h" />

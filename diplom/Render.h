@@ -7,6 +7,7 @@ class WindowManager;
 class Buffer;
 class ExpandBufferDeque;
 class AbstractItertionMetod;
+class Camera;
 
 class Render
 {
@@ -14,6 +15,7 @@ private:
 	DiplomApp* app; //Указатель на наше приложение
 	WindowManager* windowManager; //Указатель на менеджер окон
 	AbstractItertionMetod* itertionMetod;
+	Camera* camera;
 
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ОБЪЕКТА ВУЛКАН*/
 private:
@@ -163,7 +165,7 @@ private:
 public:
 	Render();
 	~Render();
-	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod);
+	void RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod, Camera* newCamera);
 	void drawFrame();
 	void idleDevice();
 

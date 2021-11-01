@@ -69,6 +69,9 @@
     <ClCompile Include="renderHelp\StaticStage.cpp">
       <Filter>Исходные файлы\renderHelp</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -106,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="renderHelp\StaticStage.h">
       <Filter>Файлы заголовков\renderHelp</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

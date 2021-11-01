@@ -5,16 +5,18 @@ void DiplomApp::init()
 {
 	rk3d.changePosition({ 10, 10, 10 });
 	rk3d.setDelta(0.005);
-	whindow.windowManagerInit(this);
-	render.RenderInit(this, &whindow, &rk3d);
+	camera.init();
+	camera.setSpeed(10.0f);
+	whindow.windowManagerInit(this, &camera);
+	render.RenderInit(this, &whindow, &rk3d, &camera);
 }
 
 void DiplomApp::mainLoop()
 {
-	
 	while (!whindow.shoudClose())
 	{
 		whindow.pollEvents();
+		camera.updateView();
 		render.drawFrame();
 		rk3d.step();
 	}

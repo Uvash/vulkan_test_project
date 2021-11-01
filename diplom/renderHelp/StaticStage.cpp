@@ -5,6 +5,10 @@ using namespace renderHelp;
 
 StaticStage::StaticStage(VkExtent2D* swapChainExtent) : viewport{}, scissor{}, viewportState{}, rasterizer{}, multisampling{}, colorBlendAttachment{}, colorBlending{}
 {
+	if (!swapChainExtent)
+	{
+		throw std::runtime_error("SwapChainExtent must be created before create StaticStage");
+	}
 	//”казываем область вывода
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;

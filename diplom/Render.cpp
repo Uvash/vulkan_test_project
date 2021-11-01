@@ -39,7 +39,7 @@ Render::~Render()
 	vkDestroyInstance(instance, nullptr); //”ничтожаем экземпл€р вулкана
 }
 
-void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod)
+void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod, Camera* newCamera)
 {
 	if(!new_app)
 	{
@@ -53,9 +53,14 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, Ab
 	{
 		throw std::runtime_error("WindowManager must be created before create Vulkan");
 	}
+	if (!newCamera)
+	{
+		throw std::runtime_error("Camera must be created before create Vulkan");
+	}
 	app = new_app;
 	windowManager = new_windowManager;
 	itertionMetod = newItertionMetod;
+	camera = newCamera;
 
 	createInstance();
 	createSurface();
@@ -537,6 +542,7 @@ void Render::recreateSwapChain()
 		windowManager->getFramebufferSize(width, height);
 		glfwWaitEvents();
 	}
+	camera->setProj(width / (float)height);
 	//ќжидаем завершени€ всех операций
 	vkDeviceWaitIdle(device);
 	//”дал€ем кадры и прочий мусор
@@ -632,6 +638,7 @@ VkExtent2D Render::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities
 		int width, height;
 
 		windowManager->getFramebufferSize(width, height);
+		camera->setProj(width / (float)height); // обновл€ем соотношение сторон на экране
 		VkExtent2D actualExtent =
 		{
 			static_cast<uint32_t>(width),
@@ -916,7 +923,7 @@ void Render::updateUniformBuffer(uint32_t currentImage)
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	//»змен€ем временный буфер дл€ кадра в зависимости от времени
-	UniformBufferObject ubo{};
+	/*UniformBufferObject ubo{};
 	//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -925,10 +932,12 @@ void Render::updateUniformBuffer(uint32_t currentImage)
 	ubo.proj = glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
 
 	ubo.proj[1][1] *= -1;
+	*/
+	camera->getUniformBuffer();
 	//ѕишем переносим временный буфер в глобальный буфер кадра
 	void* data;
-	vkMapMemory(device, uniformBuffers[currentImage]->getVkMemoryHandle(), 0, sizeof(ubo), 0, &data);
-	memcpy(data, &ubo, sizeof(ubo));
+	vkMapMemory(device, uniformBuffers[currentImage]->getVkMemoryHandle(), 0, sizeof(*camera->getUniformBuffer()), 0, &data);
+	memcpy(data, camera->getUniformBuffer(), sizeof(*camera->getUniformBuffer()));
 	vkUnmapMemory(device, uniformBuffers[currentImage]->getVkMemoryHandle());
 }
 

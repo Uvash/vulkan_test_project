@@ -3,6 +3,7 @@
 #include "iteratorMetods/RungeKutte3d.h"
 #include "WindowManager.h"
 #include "Render.h"
+#include "Camera.h"
 
 class DiplomApp
 {
@@ -11,6 +12,7 @@ private:
 	RungeKutte3d rk3d;
 	WindowManager whindow;
 	Render render;
+	Camera camera;
 
 	void init();
 	void mainLoop();

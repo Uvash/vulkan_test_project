@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "WindowManager.h"
+#include "Camera.h"
 #include "DiplomApp.h"
+#include <functional>
 
 WindowManager::WindowManager()
 {
@@ -17,13 +19,18 @@ WindowManager::~WindowManager()
 
 }
 
-void WindowManager::windowManagerInit(DiplomApp* new_app)
+void WindowManager::windowManagerInit(DiplomApp* new_app, Camera* newCamera)
 {
-	if (new_app == nullptr)
+	if (!new_app)
 	{
 		throw std::runtime_error("App must be created before create WindowManager");
 	}
+	if (!newCamera)
+	{
+		throw std::runtime_error("Camera must be created before create WindowManager");
+	}
 	app = new_app;
+	camera = newCamera;
 	glfwInit();
 	//Просим glfw не создавать контекст opengl
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -33,6 +40,10 @@ void WindowManager::windowManagerInit(DiplomApp* new_app)
 	glfwSetWindowUserPointer(window, this);
 	//Указываем какую функцию вызывать в случаи изменения окна
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+	//Указываем какую функцию вызвать в случаии нажатия кнопки в окне
+	glfwSetKeyCallback(window, static_key_callback);
+	//Передаём в окно, указатель на наш класс
+	glfwSetWindowUserPointer(window, reinterpret_cast<void*>(this));
 	//Окно инициализированно
 	windowCreated = true;
 }
@@ -44,6 +55,77 @@ void WindowManager::framebufferResizeCallback(GLFWwindow* window, int width, int
 	app->framebufferResized = true;
 }
 
+void WindowManager::static_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	//Получаем наш указатель назад из окна и вызываем его
+	WindowManager* handler = reinterpret_cast<WindowManager*>(glfwGetWindowUserPointer(window));
+	if (handler)
+	{
+		handler->key_callback(key, scancode, action, mods);
+	}		
+}
+
+void WindowManager::key_callback(int key, int scancode, int action, int mods)
+{
+	//std::cout << "some one press a key: " << key << " scancode: " << scancode << " action: " << action << " mods: " << mods << std::endl;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+	switch (key)
+	{
+	case(GLFW_KEY_W):
+	{
+		if (action)
+			x = 1.0f;
+		else
+			x = 0.0f;
+		break;
+	}
+	case(GLFW_KEY_S):
+	{
+		if (action)
+			x = -1.0f;
+		else
+			x = 0.0f;
+		break;
+	}
+	case(GLFW_KEY_D):
+	{
+		if (action)
+			y = 1.0f;
+		else
+			y = 0.0f;
+		break;
+	}
+	case(GLFW_KEY_A):
+	{
+		if (action)
+			y = -1.0f;
+		else
+			y = 0.0f;
+		break;
+	}
+	case(GLFW_KEY_E):
+	{
+		if (action)
+			z = 1.0f;
+		else
+			z = 0.0f;
+		break;
+	}
+	case(GLFW_KEY_Q):
+	{
+		if (action)
+			z = -1.0f;
+		else
+			z = 0.0f;
+		break;
+	}
+	default: {break; }
+	}
+
+	camera->inputAxis = { x, y, z };
+}
 bool WindowManager::shoudClose()
 {
 	if (windowCreated)
