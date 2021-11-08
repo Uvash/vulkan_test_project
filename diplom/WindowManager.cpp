@@ -40,8 +40,11 @@ void WindowManager::windowManagerInit(DiplomApp* new_app, Camera* newCamera)
 	glfwSetWindowUserPointer(window, this);
 	//Указываем какую функцию вызывать в случаи изменения окна
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-	//Указываем какую функцию вызвать в случаии нажатия кнопки в окне
+	//Указываем какую функцию вызвать в случаии нажатия кнопки клавиатуры в окне
 	glfwSetKeyCallback(window, static_key_callback);
+	//Указываем какую функцию вызвать в случаии нажатия кнопки мыши
+	glfwSetMouseButtonCallback(window, static_button_callback);
+	glfwSetCursorPosCallback(window, static_cursor_position_callback);
 	//Передаём в окно, указатель на наш класс
 	glfwSetWindowUserPointer(window, reinterpret_cast<void*>(this));
 	//Окно инициализированно
@@ -125,6 +128,61 @@ void WindowManager::key_callback(int key, int scancode, int action, int mods)
 	}
 
 	camera->inputAxis = { x, y, z };
+}
+
+void WindowManager::static_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	WindowManager* handler = reinterpret_cast<WindowManager*>(glfwGetWindowUserPointer(window));
+	if (handler)
+	{
+		handler->button_callback(button, action, mods);
+	}
+}
+void WindowManager::button_callback(int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			//Захватываем курсор окном и включаем прямой ввод с мышки
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+			buttonPressed = true;
+		}
+		else
+		{
+			glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			buttonPressed = false;
+			lastPos = { 0.0, 0.0 };
+		}
+	}
+}
+void WindowManager::static_cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	WindowManager* handler = reinterpret_cast<WindowManager*>(glfwGetWindowUserPointer(window));
+	if (handler)
+	{
+		handler->cursor_position_callback(xpos, ypos);
+	}
+}
+
+void WindowManager::cursor_position_callback(double xpos, double ypos)
+{
+	if (!buttonPressed)
+		return;
+
+	if (lastPos.x == 0.0 && lastPos.y == 0.0)
+	{
+		lastPos = { xpos, ypos };
+		return;
+	}
+
+	glm::dvec2 deltaPos = lastPos - glm::dvec2{ xpos, ypos };
+	double sensitivity = 0.1;
+	deltaPos *= sensitivity;
+	camera->rotationAxis += deltaPos ;
+	lastPos = { xpos, ypos };
 }
 bool WindowManager::shoudClose()
 {
