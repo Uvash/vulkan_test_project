@@ -1069,12 +1069,7 @@ void Render::createCommandBuffers()
 		std::vector<VkDeviceSize> rawVertexOffsets;
 
 		uint32_t vertexCount = 0;
-		for (auto coldBuffer : vertexBuffer->coldBuffers)
-		{
-			vertexCount += static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(glm::vec3));
-			rawVertexBuffer.push_back(coldBuffer->getVkBufferHandle());
-			rawVertexOffsets.push_back(0);
-		}
+
 		vertexCount += static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3));
 		rawVertexBuffer.push_back(vertexBuffer->hotBuffer.getVkBufferHandle());
 		rawVertexOffsets.push_back(0);
