@@ -298,17 +298,6 @@ void Render::pickPhysicalDevice()
 
 bool Render::isDeviceSuitable(VkPhysicalDevice device)
 {
-	/*
-	//Получаем данные об устройстве
-	VkPhysicalDeviceProperties deviceProperties;
-	vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-	//Получаем данные об поддерживаемых фичах
-	VkPhysicalDeviceFeatures deviceFeatures;
-	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-	std::cout << deviceProperties.deviceName << '\n';
-	*/
 	//Нам нужно устройство с выводом графики
 	QueueFamilyIndices indices = findQueueFamilies(device);
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
@@ -572,7 +561,7 @@ void Render::cleanupSwapChain()
 	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 	graphicsPipelines.clear();
-	//vkDestroyPipeline(device, graphicsPipeline, nullptr);
+
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
 	for (size_t i = 0; i < swapChainImageViews.size(); i++)
@@ -812,15 +801,9 @@ void Render::createGraphicsPipeline()
 	//Указываем преведущие конвееры (их нет)
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
-
-	graphicsPipelines.push_back(GraphicsPipeline{ device, &pipelineInfo });
 	//Создаём конвеер
-	/*
-	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create graphics pipeline!");
-	}
-	*/
+	graphicsPipelines.push_back(GraphicsPipeline{ device, &pipelineInfo });
+	
 }
 
 void Render::createFramebuffers()
@@ -927,16 +910,7 @@ void Render::updateUniformBuffer(uint32_t currentImage)
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 	//Изменяем временный буфер для кадра в зависимости от времени
-	/*UniformBufferObject ubo{};
-	//ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	ubo.view = glm::lookAt(glm::vec3(30.0f, 30.0f, 40.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	ubo.proj = glm::perspective(glm::radians(90.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
-
-	ubo.proj[1][1] *= -1;
-	*/
 	camera->getUniformBuffer();
 	//Пишем переносим временный буфер в глобальный буфер кадра
 	void* data;
@@ -1081,12 +1055,10 @@ void Render::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
-		//vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 		VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, static_cast<uint32_t>(rawVertexBuffer.size()), rawVertexBuffer.data(), rawVertexOffsets.data());
 		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		//vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertexBuffer->hotBuffer.getBufferSize() / sizeof(glm::vec3)), 1, 0, 0);
 		vkCmdDraw(commandBuffers[i], vertexCount, 1, 0, 0);
 		vkCmdEndRenderPass(commandBuffers[i]);
 
@@ -1141,9 +1113,7 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
-	//vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-	//VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
-	//VkDeviceSize offsets[] = { 0 };
+
 	for (auto coldBuffer : vertexBuffer->coldBuffers)
 	{
 		VkBuffer vertexBuffers[] = { coldBuffer->getVkBufferHandle() };
