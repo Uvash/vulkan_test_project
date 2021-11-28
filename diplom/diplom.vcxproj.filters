@@ -72,6 +72,9 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="renderHelp\GraphicsPipeline.cpp">
+      <Filter>Исходные файлы\renderHelp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -112,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\GraphicsPipeline.h">
+      <Filter>Файлы заголовков\renderHelp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

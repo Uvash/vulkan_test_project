@@ -8,6 +8,7 @@ class Buffer;
 class ExpandBufferDeque;
 class AbstractItertionMetod;
 class Camera;
+class GraphicsPipeline;
 
 class Render
 {
@@ -110,6 +111,7 @@ private:
 	//Слой для хранения переменных используемых в шейдере локальных переменных (привязанных к вершине)
 	VkPipelineLayout pipelineLayout;
 	//Графический конвеер
+	std::vector<GraphicsPipeline> graphicsPipelines;
 	VkPipeline graphicsPipeline;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ БУФФЕРОВ ИЗОБРАЖЕНИЯ*/
 	void createFramebuffers();

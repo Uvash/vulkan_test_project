@@ -2,11 +2,13 @@
 #include "Render.h"
 #include "renderHelp/ShaderLoader.h"
 #include "renderHelp/StaticStage.h"
+#include "renderHelp/GraphicsPipeline.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 #include "HelpStructures.h"
+
 
 Render::Render()
 {
@@ -569,7 +571,8 @@ void Render::cleanupSwapChain()
 	}
 	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-	vkDestroyPipeline(device, graphicsPipeline, nullptr);
+	graphicsPipelines.clear();
+	//vkDestroyPipeline(device, graphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 	vkDestroyRenderPass(device, renderPass, nullptr);
 	for (size_t i = 0; i < swapChainImageViews.size(); i++)
@@ -810,13 +813,14 @@ void Render::createGraphicsPipeline()
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
 
-	
+	graphicsPipelines.push_back(GraphicsPipeline{ device, &pipelineInfo });
 	//Создаём конвеер
+	/*
 	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
-
+	*/
 }
 
 void Render::createFramebuffers()
@@ -1076,7 +1080,8 @@ void Render::createCommandBuffers()
 
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
+		//vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 		VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffers[i], 0, static_cast<uint32_t>(rawVertexBuffer.size()), rawVertexBuffer.data(), rawVertexOffsets.data());
@@ -1135,7 +1140,8 @@ void Render::recreateCommandBuffers(int bufferNumber)
 
 	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
+	//vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 	//VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
 	//VkDeviceSize offsets[] = { 0 };
 	for (auto coldBuffer : vertexBuffer->coldBuffers)
