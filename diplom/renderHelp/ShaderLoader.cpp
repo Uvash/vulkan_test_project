@@ -47,7 +47,10 @@ ShaderStages::~ShaderStages()
 {
 	for (auto shaderModule : vkShaderModules)
 	{
-		vkDestroyShaderModule(*device, shaderModule, nullptr);
+		if (shaderModule != VK_NULL_HANDLE)
+		{
+			vkDestroyShaderModule(*device, shaderModule, nullptr);
+		}	
 	}
 }
 

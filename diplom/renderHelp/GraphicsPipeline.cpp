@@ -31,6 +31,11 @@ GraphicsPipeline::GraphicsPipeline(GraphicsPipeline&& that) : graphicsPipeline(V
 	swap(*this, that);
 }
 
+GraphicsPipeline& GraphicsPipeline::operator=(GraphicsPipeline&& that)
+{
+	swap(*this, that);
+	return *this;
+}
 VkPipeline& GraphicsPipeline::GetPipeline()
 {
 	return graphicsPipeline;
