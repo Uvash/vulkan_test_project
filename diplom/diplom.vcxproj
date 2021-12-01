@@ -171,6 +171,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="renderHelp\GraphicsPipeline.cpp" />
+    <ClCompile Include="renderHelp\DescriptorSetLayout.cpp" />
     <ClCompile Include="renderHelp\ShaderLoader.cpp" />
     <ClCompile Include="renderHelp\StaticStage.cpp" />
     <ClCompile Include="stdafx.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="iteratorMetods\RungeKutte3d.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="renderHelp\GraphicsPipeline.h" />
+    <ClInclude Include="renderHelp\DescriptorSetLayout.h" />
     <ClInclude Include="renderHelp\ShaderLoader.h" />
     <ClInclude Include="renderHelp\StaticStage.h" />
     <ClInclude Include="stdafx.h" />

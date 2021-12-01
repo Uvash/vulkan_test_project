@@ -3,6 +3,7 @@
 #include "renderHelp/ShaderLoader.h"
 #include "renderHelp/StaticStage.h"
 #include "renderHelp/GraphicsPipeline.h"
+#include "renderHelp/DescriptorSetLayout.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
@@ -17,7 +18,7 @@ Render::Render()
 Render::~Render()
 {
 	cleanupSwapChain();
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+	descriptorSetLayout.reset();
 
 	swapForVertexBuffer.reset();
 	vertexBuffer.reset();
@@ -718,22 +719,7 @@ void Render::createRenderPass()
 
 void Render::createDescriptorSetLayout()
 {
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //Указываем что будем использовать только в вершинном шейдере
-	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = 1;
-	layoutInfo.pBindings = &uboLayoutBinding;
-
-	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor set layout!");
-	}
+	descriptorSetLayout = std::make_shared<DescriptorSetLayout>(device);
 }
 
 void Render::createGraphicsPipeline()
@@ -768,7 +754,7 @@ void Render::createGraphicsPipeline()
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout->getDescriptorSetLayout();
 	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
@@ -941,7 +927,7 @@ void Render::createDescriptorPool()
 
 void Render::createDescriptorSets()
 {
-	std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout->getDescriptorSetLayout());
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;

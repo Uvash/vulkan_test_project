@@ -9,6 +9,7 @@ class ExpandBufferDeque;
 class AbstractItertionMetod;
 class Camera;
 class GraphicsPipeline;
+class DescriptorSetLayout;
 
 class Render
 {
@@ -93,7 +94,8 @@ private:
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ СЛОЁВ (описывает как и какую информацию читать шейдерам)*/
 	void createDescriptorSetLayout();
 	//Дискриптор указывающий на глобальные переменные для использования в шейдере
-	VkDescriptorSetLayout descriptorSetLayout;
+	//VkDescriptorSetLayout descriptorSetLayout;
+	std::shared_ptr<DescriptorSetLayout> descriptorSetLayout;
 	/*АТРИБУТЫ И МЕТОДЫ НЕОБХОДИМЫЕ ДЛЯ СОЗДАНИЯ ГРАФИЧЕСКОГО КОНВЕЕРА*/
 	void createGraphicsPipeline();
 
