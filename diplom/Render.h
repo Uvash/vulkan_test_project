@@ -112,6 +112,8 @@ private:
 
 	//Слой для хранения переменных используемых в шейдере локальных переменных (привязанных к вершине)
 	VkPipelineLayout pipelineLayout;
+	void createPipelineLayout();
+	void destroyPipelineLayout();
 	//Графический конвеер
 	std::vector<GraphicsPipeline> graphicsPipelines;
 	VkPipeline graphicsPipeline;

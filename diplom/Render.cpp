@@ -75,6 +75,7 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, Ab
 	createImageViews();
 	createRenderPass();
 	createDescriptorSetLayout();
+	createPipelineLayout();
 	createGraphicsPipeline();
 	createFramebuffers();
 	initCommandPool();
@@ -544,6 +545,7 @@ void Render::recreateSwapChain()
 	createSwapChain();
 	createImageViews();
 	createRenderPass();
+	createPipelineLayout();
 	createGraphicsPipeline();
 	createFramebuffers();
 	createUniformBuffers();
@@ -564,7 +566,7 @@ void Render::cleanupSwapChain()
 
 	graphicsPipelines.clear();
 
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	destroyPipelineLayout();
 	vkDestroyRenderPass(device, renderPass, nullptr);
 	for (size_t i = 0; i < swapChainImageViews.size(); i++)
 	{
@@ -752,18 +754,6 @@ void Render::createGraphicsPipeline()
 	
 	renderHelp::StaticStage staticStage(&swapChainExtent);
 
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout->getDescriptorSetLayout();
-	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-
-	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
-
 	//Начинаем описывать структуру описывающую параметры конвера
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -792,7 +782,25 @@ void Render::createGraphicsPipeline()
 	graphicsPipelines.push_back(GraphicsPipeline{ device, &pipelineInfo });
 	
 }
+void Render::createPipelineLayout()
+{
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout->getDescriptorSetLayout();
+	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 
+	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create pipeline layout!");
+	}
+}
+
+void Render::destroyPipelineLayout()
+{
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+}
 void Render::createFramebuffers()
 {
 	//Узнаём необходимое кол-во кадров
