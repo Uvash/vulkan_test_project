@@ -5,6 +5,7 @@
 class DiplomApp;
 class WindowManager;
 class Buffer;
+class PipelineInfo;
 class ExpandBufferDeque;
 class AbstractItertionMetod;
 class Camera;
@@ -168,6 +169,7 @@ private:
 	void createSyncObjects();
 
 	friend Buffer;
+	friend PipelineInfo;
 public:
 	Render();
 	~Render();

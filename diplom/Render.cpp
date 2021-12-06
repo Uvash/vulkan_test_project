@@ -5,6 +5,7 @@
 #include "renderHelp/GraphicsPipeline.h"
 #include "renderHelp/DescriptorSetLayout.h"
 #include "renderHelp/HelpStructures.h"
+#include "renderHelp/PipelineInfo.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
@@ -727,6 +728,7 @@ void Render::createDescriptorSetLayout()
 
 void Render::createGraphicsPipeline()
 {
+#if 0
 	//После создания графического конвеера мы можем удалять файлы с кодом шейдеров и обёртки над ними
 	renderHelp::ShaderStages shader;
 	shader.init(&device);
@@ -778,8 +780,15 @@ void Render::createGraphicsPipeline()
 	//Указываем преведущие конвееры (их нет)
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
 	pipelineInfo.basePipelineIndex = -1; // Optional
+#endif
+	PipelineInfo pipelineInfo(this);
+	pipelineInfo.createPipelineInfo();
+
+	pipelineInfo.pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+
 	//Создаём конвеер
-	graphicsPipelines.push_back(GraphicsPipeline{ device, &pipelineInfo });
+	graphicsPipelines.push_back(GraphicsPipeline{ device, &(pipelineInfo.pipelineInfo) });
 	
 }
 void Render::createPipelineLayout()
