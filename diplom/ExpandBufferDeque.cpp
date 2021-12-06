@@ -4,7 +4,7 @@
 #include "Render.h"
 #include "Buffer.h"
 #include "ComplexBuffer.h"
-#include "HelpStructures.h"
+#include "renderHelp/HelpStructures.h"
 #include "ExpandBufferDeque.h"
 
 void ExpandBufferDeque::setHotBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements)

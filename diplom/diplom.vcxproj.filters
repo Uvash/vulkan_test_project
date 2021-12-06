@@ -92,8 +92,8 @@
     <ClInclude Include="Render.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="HelpStructures.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="renderHelp\HelpStructures.h">
+      <Filter>Файлы заголовков\renderHelp</Filter>
     </ClInclude>
     <ClInclude Include="Buffer.h">
       <Filter>Файлы заголовков\Buffer</Filter>
@@ -121,12 +121,6 @@
     </ClInclude>
     <ClInclude Include="renderHelp\GraphicsPipeline.h">
       <Filter>Файлы заголовков\renderHelp</Filter>
-    </ClInclude>
-    <ClInclude Include="renderHelp\GraphicsPipelineFabric.h">
-      <Filter>Файлы заголовков\renderHelp</Filter>
-    </ClInclude>
-    <ClInclude Include="renderHelp\GraphicsPipelineFabricLineStrip.h">
-      <Filter>Файлы заголовков\renderHelp\GraphicsPipeline</Filter>
     </ClInclude>
     <ClInclude Include="renderHelp\DescriptorSetLayout.h">
       <Filter>Файлы заголовков\renderHelp</Filter>

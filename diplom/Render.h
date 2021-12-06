@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-#include "HelpStructures.h"
+#include "renderHelp/HelpStructures.h"
 
 class DiplomApp;
 class WindowManager;

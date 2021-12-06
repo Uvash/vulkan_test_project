@@ -183,7 +183,7 @@
     <ClInclude Include="ComplexBuffer.h" />
     <ClInclude Include="DiplomApp.h" />
     <ClInclude Include="ExpandBufferDeque.h" />
-    <ClInclude Include="HelpStructures.h" />
+    <ClInclude Include="renderHelp\HelpStructures.h" />
     <ClInclude Include="iteratorMetods\AbstractIterationMetod.h" />
     <ClInclude Include="iteratorMetods\RungeKutte3d.h" />
     <ClInclude Include="Render.h" />

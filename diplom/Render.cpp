@@ -4,11 +4,12 @@
 #include "renderHelp/StaticStage.h"
 #include "renderHelp/GraphicsPipeline.h"
 #include "renderHelp/DescriptorSetLayout.h"
+#include "renderHelp/HelpStructures.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
-#include "HelpStructures.h"
+
 
 
 Render::Render()
