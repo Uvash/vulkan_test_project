@@ -81,6 +81,9 @@
     <ClCompile Include="renderHelp\PipelineInfo.cpp">
       <Filter>Исходные файлы\renderHelp</Filter>
     </ClCompile>
+    <ClCompile Include="renderHelp\Shader.cpp">
+      <Filter>Исходные файлы\renderHelp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -129,6 +132,9 @@
       <Filter>Файлы заголовков\renderHelp</Filter>
     </ClInclude>
     <ClInclude Include="renderHelp\PipelineInfo.h">
+      <Filter>Файлы заголовков\renderHelp</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\Shader.h">
       <Filter>Файлы заголовков\renderHelp</Filter>
     </ClInclude>
   </ItemGroup>

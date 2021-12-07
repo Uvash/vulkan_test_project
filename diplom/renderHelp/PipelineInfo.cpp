@@ -2,16 +2,13 @@
 #include "PipelineInfo.h"
 #include "..\Render.h"
 
-PipelineInfo::PipelineInfo(Render* newRender) : render(newRender), pipelineInfo{}, shader{}, bindingDescription{ Vertex::getBindingDescription() }, \
+PipelineInfo::PipelineInfo(Render* newRender) : render{ newRender }, pipelineInfo{}, shader{ newRender->device }, bindingDescription{ Vertex::getBindingDescription() }, \
 attributeDescriptions{ Vertex::getAttributeDescriptions() }, inputAssembly{}, staticStage{&newRender->swapChainExtent}
 {
 	if (render == nullptr)
 	{
 		throw std::runtime_error("PipelineInf: pointer Render is nullptr");
 	}
-
-	shader.init(&render->device);
-	shader.createStagingBuffer();
 }
 
 void PipelineInfo::createPipelineInfo()

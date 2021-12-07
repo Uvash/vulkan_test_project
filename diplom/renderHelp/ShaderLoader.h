@@ -1,5 +1,6 @@
 #pragma once
 #include "../stdafx.h"
+#include "Shader.h"
 
 namespace renderHelp
 {
@@ -8,13 +9,10 @@ namespace renderHelp
 	public:
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
-		void init(VkDevice* newDevice);
-		void createStagingBuffer();
+		ShaderStages(VkDevice newDevice);
 		~ShaderStages();
 	private:
-		VkDevice *device;
-		std::vector<VkShaderModule> vkShaderModules;
-		static std::vector<char> readFile(const std::string& filename);
-		VkShaderModule createShaderModule(const std::vector<char>& code);		
+		VkDevice device;
+		std::vector<Shader> shaders;	
 	};
 }
