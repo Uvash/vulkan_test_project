@@ -173,6 +173,8 @@
     <ClCompile Include="renderHelp\GraphicsPipeline.cpp" />
     <ClCompile Include="renderHelp\DescriptorSetLayout.cpp" />
     <ClCompile Include="renderHelp\PipelineInfo.cpp" />
+    <ClCompile Include="renderHelp\PipelineInfo\Line.cpp" />
+    <ClCompile Include="renderHelp\PipelineInfo\StripLine.cpp" />
     <ClCompile Include="renderHelp\Shader.cpp" />
     <ClCompile Include="renderHelp\ShaderLoader.cpp" />
     <ClCompile Include="renderHelp\StaticStage.cpp" />
@@ -192,6 +194,8 @@
     <ClInclude Include="renderHelp\GraphicsPipeline.h" />
     <ClInclude Include="renderHelp\DescriptorSetLayout.h" />
     <ClInclude Include="renderHelp\PipelineInfo.h" />
+    <ClInclude Include="renderHelp\PipelineInfo\Line.h" />
+    <ClInclude Include="renderHelp\PipelineInfo\StripLine.h" />
     <ClInclude Include="renderHelp\Shader.h" />
     <ClInclude Include="renderHelp\ShaderLoader.h" />
     <ClInclude Include="renderHelp\StaticStage.h" />

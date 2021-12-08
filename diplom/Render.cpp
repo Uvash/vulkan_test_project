@@ -6,6 +6,8 @@
 #include "renderHelp/DescriptorSetLayout.h"
 #include "renderHelp/HelpStructures.h"
 #include "renderHelp/PipelineInfo.h"
+#include "renderHelp/PipelineInfo/Line.h"
+#include "renderHelp/PipelineInfo/StripLine.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "DiplomApp.h"
@@ -728,68 +730,15 @@ void Render::createDescriptorSetLayout()
 
 void Render::createGraphicsPipeline()
 {
-#if 0
-	//После создания графического конвеера мы можем удалять файлы с кодом шейдеров и обёртки над ними
-	renderHelp::ShaderStages shader;
-	shader.init(&device);
-	shader.createStagingBuffer();
+	std::vector<std::shared_ptr<PipelineInfo>> pipelinePrecursor;
+	pipelinePrecursor.push_back(std::make_shared<Pipeline::StripLine>(*this));
+	pipelinePrecursor.push_back(std::make_shared<Pipeline::Line>(*this));
 
-	//Узнаём откуда что читаем
-	auto bindingDescription = Vertex::getBindingDescription();
-	auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
-
-	//Описываем структуру определяющую как вершины будут записываться в конвеер
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-	//Описываем что именно пытаються изобразить вершины
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	//inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-	inputAssembly.primitiveRestartEnable = VK_FALSE;
-	
-	renderHelp::StaticStage staticStage(&swapChainExtent);
-
-	//Начинаем описывать структуру описывающую параметры конвера
-	VkGraphicsPipelineCreateInfo pipelineInfo{};
-	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	//Включаем шейдеры
-	pipelineInfo.stageCount = shader.shaderStages.size();
-	pipelineInfo.pStages = shader.shaderStages.data();
-
-	//Включаем описание фиксированных стадий
-	pipelineInfo.pVertexInputState = &vertexInputInfo;
-	pipelineInfo.pInputAssemblyState = &inputAssembly;
-	pipelineInfo.pViewportState = &staticStage.viewportState;
-	pipelineInfo.pRasterizationState = &staticStage.rasterizer;
-	pipelineInfo.pMultisampleState = &staticStage.multisampling;
-	pipelineInfo.pDepthStencilState = nullptr; // Optional
-	pipelineInfo.pColorBlendState = &staticStage.colorBlending;
-	pipelineInfo.pDynamicState = nullptr; // Optional
-	//Подключаем информацию глобальных переменных
-	pipelineInfo.layout = pipelineLayout;
-	//Подключаем проходы рендеренига
-	pipelineInfo.renderPass = renderPass;
-	pipelineInfo.subpass = 0;
-	//Указываем преведущие конвееры (их нет)
-	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-	pipelineInfo.basePipelineIndex = -1; // Optional
-#endif
-	PipelineInfo pipelineInfo(this);
-	pipelineInfo.createPipelineInfo();
-
-	pipelineInfo.pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-
-
-	//Создаём конвеер
-	graphicsPipelines.push_back(GraphicsPipeline{ device, &(pipelineInfo.pipelineInfo) });
-	
+	for (auto pipeline : pipelinePrecursor)
+	{
+		pipeline->assemblePipelineInfo();
+		graphicsPipelines.push_back(GraphicsPipeline{ device, &pipeline->getPipelineInfo() });
+	}	
 }
 void Render::createPipelineLayout()
 {

@@ -14,21 +14,26 @@ class PipelineInfo
 {
 public:
 	PipelineInfo() = delete;
-	PipelineInfo(Render* newRender);
+	PipelineInfo(Render& newRender);
 	
-	~PipelineInfo();
+	virtual ~PipelineInfo();
 
-	void createPipelineInfo();
-	VkGraphicsPipelineCreateInfo pipelineInfo;
+	void assemblePipelineInfo(); //К сожалению в конструкторе не возможен вызов виртуальных методов без натыкания на pvc
+	const VkGraphicsPipelineCreateInfo& getPipelineInfo() &;
+	
 
-	Render* render = nullptr;
+protected:
+	virtual void createPipelineInfo();
+	virtual void createShaders();
+	virtual void createVertexInputInfo();
+	virtual void createInputAssembly();
 
-	renderHelp::ShaderStages shader;
-	std::vector<Shader> shaders;
-
+	Render& render;
+	std::shared_ptr<renderHelp::ShaderStages> shader;
 	VkVertexInputBindingDescription bindingDescription{};
 	std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions;
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	renderHelp::StaticStage staticStage;
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+	VkGraphicsPipelineCreateInfo pipelineInfo;
 };

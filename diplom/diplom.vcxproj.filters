@@ -31,6 +31,12 @@
     <Filter Include="Файлы заголовков\renderHelp">
       <UniqueIdentifier>{2fa529b3-a5ae-4746-bea3-802036297bc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\renderHelp\PipelineInfo">
+      <UniqueIdentifier>{6cf3c60a-b1aa-4d8f-bfb9-b0d9b9e81873}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\renderHelp\PipelineInfo">
+      <UniqueIdentifier>{c374be02-ed6d-434b-b4b1-d6902aee09d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -84,6 +90,12 @@
     <ClCompile Include="renderHelp\Shader.cpp">
       <Filter>Исходные файлы\renderHelp</Filter>
     </ClCompile>
+    <ClCompile Include="renderHelp\PipelineInfo\StripLine.cpp">
+      <Filter>Исходные файлы\renderHelp\PipelineInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="renderHelp\PipelineInfo\Line.cpp">
+      <Filter>Исходные файлы\renderHelp\PipelineInfo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -136,6 +148,12 @@
     </ClInclude>
     <ClInclude Include="renderHelp\Shader.h">
       <Filter>Файлы заголовков\renderHelp</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\PipelineInfo\StripLine.h">
+      <Filter>Файлы заголовков\renderHelp\PipelineInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="renderHelp\PipelineInfo\Line.h">
+      <Filter>Файлы заголовков\renderHelp\PipelineInfo</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
