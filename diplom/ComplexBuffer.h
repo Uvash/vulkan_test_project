@@ -6,10 +6,11 @@
 class ComplexBuffer : public Buffer
 {
 public:
-	virtual ~ComplexBuffer();
+	~ComplexBuffer() override = default;
+	ComplexBuffer(Render& newRender);
 	void resetComplexBuffer();
-	void addBuffer(Buffer* newBuffer);
-	void addComplexBuffer(ComplexBuffer* newBuffer);
+	void addBuffer(Buffer& newBuffer);
+	void addComplexBuffer(ComplexBuffer& newBuffer);
 	inline VkDeviceSize getUsingMemorySize() { return usingMemorySize; }
 protected:
 	VkDeviceSize usingMemorySize; // Количество памяти, содержащее полезную информацию

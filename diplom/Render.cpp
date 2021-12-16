@@ -818,18 +818,16 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 void Render::createVertexBuffer()
 {
 
-	vertexBuffer = std::make_shared<ExpandBufferDeque>();
+	vertexBuffer = std::make_shared<ExpandBufferDeque>(*this);
 
 	vertexBuffer->setHotBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	vertexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	vertexBuffer->initBuffer(this);
 	vertexBuffer->createBuffer(sizeof(vertices[0]) * 1024);
 
 	//создаём буфер для обмена
-	swapForVertexBuffer = std::make_shared<Buffer>();
-	swapForVertexBuffer->initBuffer(this);
+	swapForVertexBuffer = std::make_shared<Buffer>(*this);
 	swapForVertexBuffer->createBuffer(sizeof(itertionMetod->result[0]), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -848,8 +846,7 @@ void Render::createUniformBuffers()
 
 	for (size_t i = 0; i < swapChainImages.size(); i++)
 	{
-		uniformBuffers[i] = std::make_shared<Buffer>();
-		uniformBuffers[i]->initBuffer(this);
+		uniformBuffers[i] = std::make_shared<Buffer>(*this);
 		uniformBuffers[i]->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -952,7 +949,7 @@ void Render::expandVertexBuffer()
 		memcpy(data, &(itertionMetod->result.back()), bufferSize);
 		vkUnmapMemory(device, swapForVertexBuffer->getVkMemoryHandle());
 
-		vertexBuffer->addBuffer(swapForVertexBuffer.get());
+		vertexBuffer->addBuffer(*swapForVertexBuffer.get());
 	}
 
 

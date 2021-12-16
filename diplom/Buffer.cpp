@@ -3,26 +3,15 @@
 #include "Buffer.h"
 #include "Render.h"
 
-Buffer::Buffer()
-{
-
-}
 
 Buffer::~Buffer()
 {
-	if (init_complite && buffer_complite)
-	{
-		deallocBuffer();
-		deallocMemory();
-
-	}
-
+	clearBuffer();
 }
 
-void Buffer::initBuffer(Render* new_render)
+Buffer::Buffer(Render& new_render) : render(&new_render)
 {
-	render = new_render;
-	init_complite = true;
+
 }
 
 /*
@@ -35,11 +24,20 @@ void Buffer::initBuffer(Render* new_render)
  */
 void Buffer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
+	if (vkBuffer != VK_NULL_HANDLE || bufferMemory != VK_NULL_HANDLE)
+	{
+		clearBuffer();
+	}
 	allocBuffer(size, usage);
 	allocMemory(properties);
 	bindMemory();
 }
 
+void Buffer::clearBuffer()
+{
+	deallocBuffer();
+	deallocMemory();
+}
 /*
  *@brief Определяет наиболее оптимальный тип памяти для наших запросов
  *
@@ -60,7 +58,7 @@ uint32_t Buffer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags prope
 			return i;
 		}
 	}
-	throw std::runtime_error("failed to find suitable memory type!");
+	throw std::runtime_error("Buffer : failed to find suitable memory type!");
 }
 
 /*
@@ -116,15 +114,17 @@ void Buffer::allocBuffer(VkDeviceSize size, VkBufferUsageFlags usage)
 {
 	bufferSize = size;
 	vkBufferFlags = usage;
+
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
+	bufferInfo.size = bufferSize;
+	bufferInfo.usage = vkBufferFlags;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
 	//Создаём буффер
 	if (vkCreateBuffer(render->device, &bufferInfo, nullptr, &vkBuffer) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create buffer!");
+		throw std::runtime_error("Buffer : failed to create buffer!");
 	}
 }
 
@@ -141,24 +141,45 @@ void  Buffer::allocMemory(VkMemoryPropertyFlags properties)
 	//Выделяем память
 	if (vkAllocateMemory(render->device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to allocate buffer memory!");
+		throw std::runtime_error("Buffer : failed to allocate buffer memory!");
 	}
 }
 
 void Buffer::deallocBuffer()
 {
-	vkDestroyBuffer(render->device, vkBuffer, nullptr);
-	buffer_complite = false;
+	if (vkBuffer != VK_NULL_HANDLE)
+	{
+		vkDestroyBuffer(render->device, vkBuffer, nullptr);
+		vkBuffer = VK_NULL_HANDLE;
+	}
 	bufferSize = 0;
 }
 
 void Buffer::deallocMemory()
 {
-	vkFreeMemory(render->device, bufferMemory, nullptr);
+	if (bufferMemory != VK_NULL_HANDLE)
+	{
+		vkFreeMemory(render->device, bufferMemory, nullptr);
+		bufferMemory = VK_NULL_HANDLE;
+	}
 }
 
 void Buffer::bindMemory()
 {
+	if (vkBuffer == VK_NULL_HANDLE || bufferMemory == VK_NULL_HANDLE)
+	{
+		throw std::runtime_error("Buffer : try bind buffer and memory with null handle !");
+	}
 	vkBindBufferMemory(render->device, vkBuffer, bufferMemory, 0);
-	buffer_complite = true;
+}
+
+Buffer::Buffer(Buffer&& that)
+{
+	swap(*this, that);
+}
+
+Buffer& Buffer::operator=(Buffer&& that)
+{
+	swap(*this, that);
+	return *this;
 }

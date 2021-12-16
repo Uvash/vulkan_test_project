@@ -15,11 +15,11 @@ public:
 	void setHotBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements);
 	void setColdBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements);
 
-	void addBuffer(Buffer* newBuffer);
-	void initBuffer(Render* newRender);
+	void addBuffer(Buffer& newBuffer);
 	void createBuffer(VkDeviceSize size);
 
-	ExpandBufferDeque();
+	ExpandBufferDeque() = delete;
+	ExpandBufferDeque(Render& newRender);
 	~ExpandBufferDeque();
 
 private:
