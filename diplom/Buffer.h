@@ -24,7 +24,7 @@ public:
 	virtual ~Buffer();
 
 	Buffer(Render& new_render);
-	void initBuffer();
+
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 	void clearBuffer();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

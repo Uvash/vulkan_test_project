@@ -4,11 +4,15 @@
 
 class DiplomApp;
 class WindowManager;
-class Buffer;
-class PipelineInfo;
-class ExpandBufferDeque;
-class AbstractItertionMetod;
 class Camera;
+
+class AbstractItertionMetod;
+
+class Buffer;
+class ExpandBufferDeque;
+class Primitive;
+
+class PipelineInfo;
 class GraphicsPipeline;
 class DescriptorSetLayout;
 
@@ -131,6 +135,8 @@ private:
 	void createCommandPool(uint32_t familyIndex, VkCommandPool* pool);
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю бепьхм*/
 	void createVertexBuffer();
+
+	std::shared_ptr <Primitive> primitive;
 	//аСТЕП БЕПЬХМ
 	std::shared_ptr<ExpandBufferDeque> vertexBuffer;
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю хмдейянб бепьхм*/

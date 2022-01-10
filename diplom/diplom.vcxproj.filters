@@ -37,6 +37,12 @@
     <Filter Include="Файлы заголовков\renderHelp\PipelineInfo">
       <UniqueIdentifier>{c374be02-ed6d-434b-b4b1-d6902aee09d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Файлы заголовков\Primitive">
+      <UniqueIdentifier>{a88da940-41b8-4317-9054-af73b07c96f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Primitive">
+      <UniqueIdentifier>{3029b085-7ee8-47b3-870c-c6a315d71469}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -96,6 +102,9 @@
     <ClCompile Include="renderHelp\PipelineInfo\Line.cpp">
       <Filter>Исходные файлы\renderHelp\PipelineInfo</Filter>
     </ClCompile>
+    <ClCompile Include="Primitive\Primitive.cpp">
+      <Filter>Исходные файлы\Primitive</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -154,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="renderHelp\PipelineInfo\Line.h">
       <Filter>Файлы заголовков\renderHelp\PipelineInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitive\Primitive.h">
+      <Filter>Файлы заголовков\Primitive</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

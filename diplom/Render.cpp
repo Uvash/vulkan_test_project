@@ -10,6 +10,7 @@
 #include "renderHelp/PipelineInfo/StripLine.h"
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
+#include "Primitive/Primitive.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 
@@ -26,6 +27,7 @@ Render::~Render()
 
 	swapForVertexBuffer.reset();
 	vertexBuffer.reset();
+	primitive.reset();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -44,6 +46,8 @@ Render::~Render()
 	}
 	vkDestroySurfaceKHR(instance, surface, nullptr); //”ничтожаем поверхность вывода
 	vkDestroyInstance(instance, nullptr); //”ничтожаем экземпл€р вулкана
+
+	primitive.reset();
 }
 
 void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod, Camera* newCamera)
@@ -817,6 +821,22 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 
 void Render::createVertexBuffer()
 {
+//”далить после тестов
+#if 1
+	std::vector<glm::vec3> rawData = { {0.0f , 0.0f , 0.0f}, {1.0f, 1.0f, 1.0f} , {1.0f, 1.0f, 0.0f}, {0.0f , 0.0f , 0.0f} };
+	primitive = std::make_shared<Primitive>(*this);
+	VkDeviceSize primitiveSize = (VkDeviceSize)(rawData.size() * sizeof(rawData[0]));
+	primitive->pBuffer->createBuffer(primitiveSize,VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	vkQueueWaitIdle(graphicsQueue);
+
+	void* data;
+	vkMapMemory(device, primitive->pBuffer->getVkMemoryHandle(), 0, primitiveSize, 0, &data);
+	memcpy(data, rawData.data(), primitiveSize);
+	vkUnmapMemory(device, primitive->pBuffer->getVkMemoryHandle());
+	
+#endif
 
 	vertexBuffer = std::make_shared<ExpandBufferDeque>(*this);
 
@@ -1064,6 +1084,8 @@ void Render::recreateCommandBuffers(int bufferNumber)
 
 	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
 
+	primitive->addComandsToCommandBuffer(commandBuffers[bufferNumber], descriptorSets[bufferNumber], pipelineLayout);
+
 	for (auto coldBuffer : vertexBuffer->coldBuffers)
 	{
 		VkBuffer vertexBuffers[] = { coldBuffer->getVkBufferHandle() };
@@ -1078,7 +1100,6 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
 	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
 	vkCmdDraw(commandBuffers[bufferNumber], static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3)), 1, 0, 0);
-
 
 	//закрываем буфер на запись
 	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
