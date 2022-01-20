@@ -18,20 +18,22 @@ public:
 	
 	virtual ~PipelineInfo();
 
-	void assemblePipelineInfo(); //К сожалению в конструкторе не возможен вызов виртуальных методов без натыкания на pvc
+	virtual void assemblePipelineInfo(); //К сожалению в конструкторе не возможен вызов виртуальных методов без натыкания на pvc
+
 	const VkGraphicsPipelineCreateInfo& getPipelineInfo() &;
 	
 
 protected:
+	virtual void setAttributeDescription();
 	virtual void createPipelineInfo();
-	virtual void createShaders();
+	virtual void createShaders(int shaderType = renderHelp::shaderType::STATIC_COLOR);
 	virtual void createVertexInputInfo();
 	virtual void createInputAssembly();
 
 	Render& render;
 	std::shared_ptr<renderHelp::ShaderStages> shader;
 	VkVertexInputBindingDescription bindingDescription{};
-	std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions;
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	renderHelp::StaticStage staticStage;
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};

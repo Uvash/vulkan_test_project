@@ -13,6 +13,15 @@ StripLine::~StripLine()
 
 }
 
+void  StripLine::assemblePipelineInfo()
+{
+	setAttributeDescription();
+	createShaders(renderHelp::shaderType::STATIC_COLOR);
+	createVertexInputInfo();
+	createInputAssembly();
+	createPipelineInfo();
+}
+
 void StripLine::createInputAssembly()
 {
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

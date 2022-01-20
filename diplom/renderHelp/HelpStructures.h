@@ -26,7 +26,6 @@ struct SwapChainSupportDetails
 
 struct Vertex {
 	glm::vec3 pos;
-	//glm::vec3 color;
 
 	//Структура описывающая вулкану откуда брать вершины и с каким смещением
 	static VkVertexInputBindingDescription getBindingDescription()
@@ -38,20 +37,48 @@ struct Vertex {
 		return bindingDescription;
 	}
 	//Структура описывающая о том какие данные откуда брать
-	static std::array<VkVertexInputAttributeDescription, 1> getAttributeDescriptions()
+	static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions()
 	{
-		std::array<VkVertexInputAttributeDescription, 1> attributeDescriptions{};
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{1};
 		//Указываем параметры для координат
 		attributeDescriptions[0].binding = 0;	//Смещение от начала структуры
 		attributeDescriptions[0].location = 0;	//С какого слоя мы будет брать данные
 		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; //Указываем какой тип данных передаём vec2
 		attributeDescriptions[0].offset = offsetof(Vertex, pos); //Указываем смещение до списка вершин
-		/*//Указываем параметры для цвета
+		return attributeDescriptions;
+	}
+
+};
+
+struct VertexColored {
+	glm::vec3 pos;
+	glm::vec3 color;
+
+	//Структура описывающая вулкану откуда брать вершины и с каким смещением
+	static VkVertexInputBindingDescription getBindingDescription()
+	{
+		VkVertexInputBindingDescription bindingDescription{};
+		bindingDescription.binding = 0; //Координаты у нас с самого начала структуры
+		bindingDescription.stride = sizeof(VertexColored); //Смещение до следующей структуры
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		return bindingDescription;
+	}
+	//Структура описывающая о том какие данные откуда брать
+	static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions()
+	{
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{ 2 };
+		//Указываем параметры для координат
+		attributeDescriptions[0].binding = 0;	//Смещение от начала структуры
+		attributeDescriptions[0].location = 0;	//С какого слоя мы будет брать данные
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT; //Указываем какой тип данных передаём vec2
+		attributeDescriptions[0].offset = offsetof(VertexColored, pos); //Указываем смещение до списка вершин
+		
+		//Указываем параметры для цвета
 		attributeDescriptions[1].binding = 0;
 		attributeDescriptions[1].location = 1;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-		*/
+		attributeDescriptions[1].offset = offsetof(VertexColored, color);
+
 		return attributeDescriptions;
 	}
 

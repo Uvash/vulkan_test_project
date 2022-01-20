@@ -5,12 +5,20 @@ using namespace Pipeline;
 
 Line::Line(Render& newRender) : PipelineInfo(newRender)
 {
-
 }
 
 Line::~Line()
 {
 
+}
+
+void  Line::assemblePipelineInfo()
+{
+	setAttributeDescription();
+	createShaders(renderHelp::shaderType::DYNAMIC_COLOR);
+	createVertexInputInfo();
+	createInputAssembly();
+	createPipelineInfo();
 }
 
 void Line::createInputAssembly()
@@ -19,3 +27,10 @@ void Line::createInputAssembly()
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 }
+
+void Line::setAttributeDescription()
+{
+	bindingDescription = VertexColored::getBindingDescription();
+	attributeDescriptions = VertexColored::getAttributeDescriptions();
+}
+

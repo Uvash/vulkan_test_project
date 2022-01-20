@@ -2,8 +2,8 @@
 #include "PipelineInfo.h"
 #include "..\Render.h"
 
-PipelineInfo::PipelineInfo(Render& newRender) : render{ newRender }, pipelineInfo{}, bindingDescription{ Vertex::getBindingDescription() }, \
-attributeDescriptions{ Vertex::getAttributeDescriptions() }, inputAssembly{}, staticStage{&newRender.swapChainExtent}
+PipelineInfo::PipelineInfo(Render& newRender) : render{ newRender }, pipelineInfo{}, \
+ inputAssembly{}, staticStage{&newRender.swapChainExtent}
 {
 
 }
@@ -13,17 +13,24 @@ PipelineInfo::~PipelineInfo()
 
 }
 
+void  PipelineInfo::assemblePipelineInfo()
+{
+	setAttributeDescription();
+	createShaders();
+	createVertexInputInfo();
+	createInputAssembly();
+	createPipelineInfo();
+}
+
 const VkGraphicsPipelineCreateInfo& PipelineInfo::getPipelineInfo() &
 {
 	return pipelineInfo;
 }
 
-void  PipelineInfo::assemblePipelineInfo()
+void PipelineInfo::setAttributeDescription()
 {
-	createShaders();
-	createVertexInputInfo();
-	createInputAssembly();
-	createPipelineInfo();
+	bindingDescription = Vertex::getBindingDescription();
+	attributeDescriptions = Vertex::getAttributeDescriptions();
 }
 
 void PipelineInfo::createPipelineInfo()
@@ -53,17 +60,20 @@ void PipelineInfo::createPipelineInfo()
 	pipelineInfo.basePipelineIndex = -1; // Optional
 }
 
-void PipelineInfo::createShaders()
+void PipelineInfo::createShaders(int shaderType)
 {
 	shader = std::make_shared<renderHelp::ShaderStages>(render.device);
+	shader->loadShaders(shaderType);
 }
 
 void PipelineInfo::createVertexInputInfo()
 {
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
 	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 }
 

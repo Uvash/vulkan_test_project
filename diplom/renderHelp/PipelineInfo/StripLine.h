@@ -9,6 +9,7 @@ namespace Pipeline
 	public:
 		StripLine(Render& newRender);
 		~StripLine();
+		void  assemblePipelineInfo() override;
 	protected:
 		void createInputAssembly() override;
 	};

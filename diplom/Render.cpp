@@ -823,7 +823,7 @@ void Render::createVertexBuffer()
 {
 //Удалить после тестов
 #if 1
-	std::vector<glm::vec3> rawData = { {0.0f , 0.0f , 0.0f}, {1.0f, 1.0f, 1.0f} , {1.0f, 1.0f, 0.0f}, {0.0f , 0.0f , 0.0f} };
+	std::vector<glm::vec3> rawData = { {-20.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 1.0f}, {20.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f , -30.0f , 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 30.0f, 0.0f}, {0.0f, 1.0f, 0.0f},  {0.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 0.0f} , {0.0f, 0.0f, 50.0f} , {0.0f, 1.0f, 0.0f} };
 	primitive = std::make_shared<Primitive>(*this);
 	VkDeviceSize primitiveSize = (VkDeviceSize)(rawData.size() * sizeof(rawData[0]));
 	primitive->pBuffer->createBuffer(primitiveSize,VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -1084,8 +1084,6 @@ void Render::recreateCommandBuffers(int bufferNumber)
 
 	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
 
-	primitive->addComandsToCommandBuffer(commandBuffers[bufferNumber], descriptorSets[bufferNumber], pipelineLayout);
-
 	for (auto coldBuffer : vertexBuffer->coldBuffers)
 	{
 		VkBuffer vertexBuffers[] = { coldBuffer->getVkBufferHandle() };
@@ -1100,6 +1098,10 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
 	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
 	vkCmdDraw(commandBuffers[bufferNumber], static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3)), 1, 0, 0);
+
+	//Отрисовываем координатную сетку
+	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[1].GetPipeline());
+	primitive->addComandsToCommandBuffer(commandBuffers[bufferNumber], descriptorSets[bufferNumber], pipelineLayout);
 
 	//закрываем буфер на запись
 	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
