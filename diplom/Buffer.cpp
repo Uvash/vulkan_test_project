@@ -110,6 +110,25 @@ void  Buffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize si
 	vkFreeCommandBuffers(render->device, render->transfertСommandPool, 1, &commandBuffer);
 }
 
+/*
+ *@brief Копирует какую-то информацию в буфер Вулкана
+ *
+ *@param srcPtr	Указатель на начало
+ *@param num Количество байт, которое необходимо скопировать
+ *@return
+ */
+void Buffer::copyToBuffer(void* srcPtr, size_t num)
+{
+	VkDeviceSize primitiveSize = (VkDeviceSize)(num);
+	createBuffer(primitiveSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	void* data;
+	vkMapMemory(render->device, bufferMemory, 0, primitiveSize, 0, &data);
+	memcpy(data, srcPtr, primitiveSize);
+	vkUnmapMemory(render->device, bufferMemory);
+}
+
 void Buffer::allocBuffer(VkDeviceSize size, VkBufferUsageFlags usage)
 {
 	bufferSize = size;

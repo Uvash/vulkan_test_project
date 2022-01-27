@@ -4,7 +4,7 @@
 class DescriptorSetLayout
 {
 public:
-	DescriptorSetLayout();
+	DescriptorSetLayout() = delete;
 	DescriptorSetLayout(VkDevice curentDevice);
 	~DescriptorSetLayout();
 	//запрещаем семантику копирования

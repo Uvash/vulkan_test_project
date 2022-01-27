@@ -1,10 +1,6 @@
 #include "stdafx.h"
 #include "DescriptorSetLayout.h"
 
-DescriptorSetLayout::DescriptorSetLayout()
-{
-
-}
 
 DescriptorSetLayout::DescriptorSetLayout(VkDevice curentDevice)
 {

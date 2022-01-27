@@ -26,7 +26,7 @@ public:
 protected:
 	virtual void setAttributeDescription();
 	virtual void createPipelineInfo();
-	virtual void createShaders(int shaderType = renderHelp::shaderType::STATIC_COLOR);
+	virtual void createShaders(int shaderType = VertexType::SIMPLE_VERTEX);
 	virtual void createVertexInputInfo();
 	virtual void createInputAssembly();
 

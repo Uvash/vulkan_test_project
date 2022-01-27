@@ -20,13 +20,13 @@ void ShaderStages::loadShaders(int shadersType)
 	}
 	switch (shadersType)
 	{
-		case shaderType::STATIC_COLOR:
+	case VertexType::SIMPLE_VERTEX:
 		{
 			shaders.push_back(Shader{ device, "shaders/vert.spv", "main", VK_SHADER_STAGE_VERTEX_BIT });
 			shaders.push_back(Shader{ device, "shaders/frag.spv", "main", VK_SHADER_STAGE_FRAGMENT_BIT });
 			break;
 		}
-		case shaderType::DYNAMIC_COLOR:
+	case VertexType::COLOR_VERTEX:
 		{
 			shaders.push_back(Shader{ device, "shaders/colorShader.spv", "main", VK_SHADER_STAGE_VERTEX_BIT });
 			shaders.push_back(Shader{ device, "shaders/frag.spv", "main", VK_SHADER_STAGE_FRAGMENT_BIT });

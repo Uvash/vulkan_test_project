@@ -1,15 +1,10 @@
 #pragma once
 #include "../stdafx.h"
 #include "Shader.h"
+#include "HelpStructures.h"
 
 namespace renderHelp
 {
-	enum shaderType
-	{
-		STATIC_COLOR, //Каждая точка для конвеера является простым vec3 и содержит свои координаты
-		DYNAMIC_COLOR //Каждая точка состоит из двух vec3 для координат и цвета
-	};
-
 	class ShaderStages
 	{
 	public:

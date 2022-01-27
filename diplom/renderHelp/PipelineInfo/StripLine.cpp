@@ -16,7 +16,7 @@ StripLine::~StripLine()
 void  StripLine::assemblePipelineInfo()
 {
 	setAttributeDescription();
-	createShaders(renderHelp::shaderType::STATIC_COLOR);
+	createShaders(VertexType::SIMPLE_VERTEX);
 	createVertexInputInfo();
 	createInputAssembly();
 	createPipelineInfo();

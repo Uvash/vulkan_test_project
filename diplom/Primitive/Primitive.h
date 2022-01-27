@@ -13,4 +13,5 @@ public:
 	std::shared_ptr<Buffer> pBuffer;
 	
 	virtual void addComandsToCommandBuffer(VkCommandBuffer& commandBuffer, VkDescriptorSet& descriptionSet, VkPipelineLayout &pipelineLayout);
+	virtual void loadFromFile(const std::string& filename);
 };

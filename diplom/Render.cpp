@@ -822,7 +822,7 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 void Render::createVertexBuffer()
 {
 //Удалить после тестов
-#if 1
+#if 0
 	std::vector<glm::vec3> rawData = { {-20.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 1.0f}, {20.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f , -30.0f , 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 30.0f, 0.0f}, {0.0f, 1.0f, 0.0f},  {0.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 0.0f} , {0.0f, 0.0f, 50.0f} , {0.0f, 1.0f, 0.0f} };
 	primitive = std::make_shared<Primitive>(*this);
 	VkDeviceSize primitiveSize = (VkDeviceSize)(rawData.size() * sizeof(rawData[0]));
@@ -835,8 +835,10 @@ void Render::createVertexBuffer()
 	vkMapMemory(device, primitive->pBuffer->getVkMemoryHandle(), 0, primitiveSize, 0, &data);
 	memcpy(data, rawData.data(), primitiveSize);
 	vkUnmapMemory(device, primitive->pBuffer->getVkMemoryHandle());
-	
+
 #endif
+	primitive = std::make_shared<Primitive>(*this);
+	primitive->loadFromFile("shapes/AxisColored.txt");
 
 	vertexBuffer = std::make_shared<ExpandBufferDeque>(*this);
 
@@ -844,7 +846,7 @@ void Render::createVertexBuffer()
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	vertexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	vertexBuffer->createBuffer(sizeof(vertices[0]) * 1024);
+	vertexBuffer->createBuffer(sizeof(itertionMetod->result[0]) * 1024);
 
 	//создаём буфер для обмена
 	swapForVertexBuffer = std::make_shared<Buffer>(*this);

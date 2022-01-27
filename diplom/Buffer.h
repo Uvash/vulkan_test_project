@@ -29,6 +29,7 @@ public:
 	void clearBuffer();
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
+	void copyToBuffer(void* srcPtr, size_t num);
 
 	Buffer(Buffer& other) = delete;
 	Buffer& operator=(Buffer& other) = delete;

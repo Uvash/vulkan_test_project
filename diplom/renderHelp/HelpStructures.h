@@ -24,6 +24,12 @@ struct SwapChainSupportDetails
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
+enum VertexType
+{
+	SIMPLE_VERTEX, //Каждая точка простой vec3
+	COLOR_VERTEX //Каждая точка двойной vec3
+};
+
 struct Vertex {
 	glm::vec3 pos;
 

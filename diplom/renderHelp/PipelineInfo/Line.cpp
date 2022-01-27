@@ -15,7 +15,7 @@ Line::~Line()
 void  Line::assemblePipelineInfo()
 {
 	setAttributeDescription();
-	createShaders(renderHelp::shaderType::DYNAMIC_COLOR);
+	createShaders(VertexType::COLOR_VERTEX);
 	createVertexInputInfo();
 	createInputAssembly();
 	createPipelineInfo();
