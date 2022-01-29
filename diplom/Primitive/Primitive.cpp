@@ -41,6 +41,8 @@ void Primitive::loadFromFile(const std::string& filename)
 	//Закрываем файл
 	file.close();
 
+	pBuffer->createBuffer(rawIndexes.size() * sizeof(rawIndexes[0]), VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	pBuffer->copyToBuffer(rawIndexes.data(), rawIndexes.size() * sizeof(rawIndexes[0]));
 	
 }

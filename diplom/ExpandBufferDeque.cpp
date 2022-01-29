@@ -29,25 +29,34 @@ void ExpandBufferDeque::addBuffer(Buffer& newBuffer)
 	hotBuffer.addBuffer(newBuffer);
 }
 
-void ExpandBufferDeque::createBuffer(VkDeviceSize size)
+void ExpandBufferDeque::createBuffer(VkDeviceSize size, size_t count)
 {
-	hotBuffer.createBuffer(size, hotBufferFlags, hotMemRequirements);
+	elementSize = size;
+	elementCount = count;
+	hotBuffer.createBuffer(elementCount * elementSize, hotBufferFlags, hotMemRequirements);
+	tempBuffer.createBuffer(elementSize, hotBufferFlags, hotMemRequirements);
 }
 
 void ExpandBufferDeque::sendHotBufferToColdBuffers()
 {
 	std::cout << "ExpandBufferDeque start addBuffer cold storage size:" << coldBuffers.size() << " " << hotBuffer.getBufferSize() << std::endl;
 	Buffer* localBuffer = new Buffer(*render);
-	localBuffer->createBuffer(hotBuffer.getUsingMemorySize(), hotBufferFlags, hotMemRequirements);
-	localBuffer->copyBuffer(hotBuffer.getVkBufferHandle(), localBuffer->getVkBufferHandle(), hotBuffer.getUsingMemorySize(), 0, 0);
-	coldBuffers.push_back(localBuffer);
 
+	localBuffer->createBuffer(hotBuffer.getUsingMemorySize(), coldBufferFlags, coldMemRequirements);
+	localBuffer->copyBuffer(hotBuffer.getVkBufferHandle(), localBuffer->getVkBufferHandle(), hotBuffer.getUsingMemorySize(), 0, 0);
+
+	tempBuffer.createBuffer(elementSize, hotBufferFlags, hotMemRequirements);
+	tempBuffer.copyBuffer(hotBuffer.getVkBufferHandle(), tempBuffer.getVkBufferHandle(), elementSize, hotBuffer.getUsingMemorySize() - elementSize, 0);
+
+	coldBuffers.push_back(localBuffer);
 	hotBuffer.resetComplexBuffer();
+	hotBuffer.addBuffer(tempBuffer);
 }
 
-ExpandBufferDeque::ExpandBufferDeque(Render& newRender) : hotBuffer{ newRender }
+ExpandBufferDeque::ExpandBufferDeque(Render& newRender) : hotBuffer{ newRender }, tempBuffer{ newRender }
 {
 	render = &newRender;
+
 }
 
 ExpandBufferDeque::~ExpandBufferDeque()

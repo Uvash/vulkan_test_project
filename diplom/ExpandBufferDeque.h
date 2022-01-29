@@ -16,7 +16,7 @@ public:
 	void setColdBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements);
 
 	void addBuffer(Buffer& newBuffer);
-	void createBuffer(VkDeviceSize size);
+	void createBuffer(VkDeviceSize size, size_t count);
 
 	ExpandBufferDeque() = delete;
 	ExpandBufferDeque(Render& newRender);
@@ -28,12 +28,13 @@ private:
 	void sendHotBufferToColdBuffers();	//Копирует данные из горячего буфера в холодный
 	std::vector<Buffer*> coldBuffers; //Холодные буфера доступные только GPU
 	ComplexBuffer hotBuffer;	//Горячий буфер, доступные для CPU и GPU
+	Buffer tempBuffer;			//Временный буфер, для сращивания "хвостов"
 
 	VkBufferUsageFlags hotBufferFlags;
 	VkMemoryPropertyFlags hotMemRequirements;
 	VkBufferUsageFlags coldBufferFlags;
 	VkMemoryPropertyFlags coldMemRequirements;
 
-	VkDeviceSize elementCountPerBuffer;
+	VkDeviceSize elementCount;
 	VkDeviceSize elementSize;
 };
