@@ -105,6 +105,12 @@
     <ClCompile Include="Primitive\Primitive.cpp">
       <Filter>Исходные файлы\Primitive</Filter>
     </ClCompile>
+    <ClCompile Include="Primitive\CurvedPrimitive.cpp">
+      <Filter>Исходные файлы\Primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="Primitive\StaticPrimitive.cpp">
+      <Filter>Исходные файлы\Primitive</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -165,6 +171,12 @@
       <Filter>Файлы заголовков\renderHelp\PipelineInfo</Filter>
     </ClInclude>
     <ClInclude Include="Primitive\Primitive.h">
+      <Filter>Файлы заголовков\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitive\CurvedPrimitive.h">
+      <Filter>Файлы заголовков\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitive\StaticPrimitive.h">
       <Filter>Файлы заголовков\Primitive</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,6 +11,8 @@ class AbstractItertionMetod;
 class Buffer;
 class ExpandBufferDeque;
 class Primitive;
+class StaticPrimitive;
+class CurvedPrimitive;
 
 class PipelineInfo;
 class GraphicsPipeline;
@@ -123,14 +125,12 @@ private:
 	void initCommandPool();
 	void createCommandPool(uint32_t familyIndex, VkCommandPool* pool);
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю бепьхм*/
-	void createVertexBuffer();
 
-	std::shared_ptr <Primitive> primitive;
-	//аСТЕП БЕПЬХМ
-	std::shared_ptr<ExpandBufferDeque> vertexBuffer;
+	std::shared_ptr <StaticPrimitive> primitive;
+	std::shared_ptr <CurvedPrimitive> ЯurvedPrimitive;
+
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю хмдейянб бепьхм*/
 	void createIndexBuffer();
-	std::shared_ptr<Buffer> swapForVertexBuffer;
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ асттепю цкнаюкэмшу бепьхм*/
 	//аСТТЕП ДКЪ ЦКНАЮКЭМШУ ОЕПЕЛЕММШУ
 	std::vector<std::shared_ptr<Buffer>> uniformBuffers;
@@ -143,7 +143,6 @@ private:
 	std::vector<VkDescriptorSet> descriptorSets;
 	
 	void createDescriptorSets();
-	void expandVertexBuffer();
 	/*юрпхасрш х лерндш менаундхлше дкъ янгдюмхъ йнлюмдмнцн асттепю*/
 	//йНЛЮМДМШИ АСТЕП
 	std::vector<VkCommandBuffer> commandBuffers;
@@ -162,9 +161,11 @@ private:
 	void createCommandBuffers();
 	void recreateCommandBuffers(int bufferNumber);
 	void createSyncObjects();
+	void createPrimitive();
 
 	friend Buffer;
 	friend PipelineInfo;
+	friend Primitive;
 public:
 	Render();
 	~Render();

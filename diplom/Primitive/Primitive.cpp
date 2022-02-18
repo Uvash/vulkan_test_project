@@ -3,11 +3,16 @@
 #include "../renderHelp/HelpStructures.h"
 #include "../Buffer.h"
 
-Primitive::Primitive(Render& newRender) : pBuffer{ std::make_shared<Buffer>(newRender) }
+Primitive::Primitive(Render& newRender, size_t newCommandBuffersCount, size_t newTargetPipeline, std::string primitiveName) : render (newRender), targetPipeline(newTargetPipeline), commandBuffersCount(newCommandBuffersCount)
 {
-
+	createCommandsBuffers();
 }
 
+ Primitive::~Primitive()
+{
+	 clearCommandsBuffers();
+}
+/*
 void Primitive::addComandsToCommandBuffer(VkCommandBuffer& commandBuffer, VkDescriptorSet& descriptionSet, VkPipelineLayout& pipelineLayout)
 {
 	VkDeviceSize offset =  0;
@@ -16,33 +21,55 @@ void Primitive::addComandsToCommandBuffer(VkCommandBuffer& commandBuffer, VkDesc
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptionSet, 0, nullptr);
 	vkCmdDraw(commandBuffer, static_cast<uint32_t>(pBuffer->getBufferSize() / sizeof(VertexColored)), 1, 0, 0);
 }
+*/
+ void Primitive::createCommandsBuffers()
+ {
+	 commandBuffers.resize(commandBuffersCount);
+	 allocCommandBuffers(commandBuffersCount);
+ }
 
-void Primitive::loadFromFile(const std::string& filename)
+ void Primitive::clearCommandsBuffers()
+ {
+	 if (commandBuffers.size() != 0)
+	 {
+		 vkFreeCommandBuffers(render.device, render.commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+		 commandBuffers.clear();
+	 }
+	 
+ }
+
+void Primitive::fillCommandsBuffers()
 {
-	std::ifstream file(filename, std::ios_base::in);
-	if (!file.is_open())
-	{
-		throw std::runtime_error("failed to open file!");
-	}
-
-
-	VertexColored vertex;
-	int i = 0;
-	std::vector<VertexColored> rawIndexes{};
-
-	float x, y, z, cx, cy, cz;
-	while (file >> x >> y >> z >> cx >> cy >> cz)
-	{
-		VertexColored vertex;
-		//file >> vertex.pos.x >> vertex.pos.y >> vertex.pos.z >> vertex.color.x >> vertex.color.y >> vertex.color.z;		
-		vertex = VertexColored{ {x, y, z}, {cx, cy, cz} };
-		rawIndexes.push_back(VertexColored{ {x, y, z}, {cx, cy, cz} });
-	}
-	//Закрываем файл
-	file.close();
-
-	pBuffer->createBuffer(rawIndexes.size() * sizeof(rawIndexes[0]), VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	pBuffer->copyToBuffer(rawIndexes.data(), rawIndexes.size() * sizeof(rawIndexes[0]));
-	
+	return;
 }
+
+void Primitive::updateCommandsBuffers(size_t bufferNumber)
+{
+	return;
+}
+
+void Primitive::allocCommandBuffers(size_t newCommandBuffersCount)
+{
+	commandBuffers.resize(newCommandBuffersCount);
+
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.commandPool = render.commandPool;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+	allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+
+	if (vkAllocateCommandBuffers(render.device, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("Primitive: failed to allocate command buffers!");
+	}
+}
+
+VkCommandBuffer& Primitive::getCommandBuffer(size_t bufferNumber)
+{
+	if (bufferNumber >= commandBuffers.size())
+	{
+		throw std::runtime_error("Primitive: failed to get command buffers!");
+	}
+	return commandBuffers[bufferNumber];
+}
+

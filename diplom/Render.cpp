@@ -11,6 +11,8 @@
 #include "Buffer.h"
 #include "ExpandBufferDeque.h"
 #include "Primitive/Primitive.h"
+#include "Primitive/StaticPrimitive.h"
+#include "Primitive/CurvedPrimitive.h"
 #include "DiplomApp.h"
 #include "WindowManager.h"
 
@@ -25,9 +27,8 @@ Render::~Render()
 	cleanupSwapChain();
 	descriptorSetLayout.reset();
 
-	swapForVertexBuffer.reset();
-	vertexBuffer.reset();
 	primitive.reset();
+	сurvedPrimitive.reset();
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
@@ -47,7 +48,6 @@ Render::~Render()
 	vkDestroySurfaceKHR(instance, surface, nullptr); //Уничтожаем поверхность вывода
 	vkDestroyInstance(instance, nullptr); //Уничтожаем экземпляр вулкана
 
-	primitive.reset();
 }
 
 void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, AbstractItertionMetod* newItertionMetod, Camera* newCamera)
@@ -86,13 +86,14 @@ void Render::RenderInit(DiplomApp* new_app, WindowManager* new_windowManager, Ab
 	createGraphicsPipeline();
 	createFramebuffers();
 	initCommandPool();
-	createVertexBuffer();
 	createIndexBuffer();
 	createUniformBuffers();
 	createDescriptorPool(); 
 	createDescriptorSets();
+	createPrimitive();
 	createCommandBuffers();
 	createSyncObjects();
+
 }
 
 void Render::createInstance()
@@ -569,6 +570,9 @@ void Render::cleanupSwapChain()
 	{
 		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
 	}
+	primitive->clearCommandsBuffers();
+	сurvedPrimitive->clearCommandsBuffers();
+	
 	vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
 	graphicsPipelines.clear();
@@ -819,42 +823,6 @@ void Render::createCommandPool(uint32_t familyIndex, VkCommandPool* pool)
 
 }
 
-void Render::createVertexBuffer()
-{
-//Удалить после тестов
-#if 0
-	std::vector<glm::vec3> rawData = { {-20.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 1.0f}, {20.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f , -30.0f , 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 30.0f, 0.0f}, {0.0f, 1.0f, 0.0f},  {0.0f , 0.0f , 0.0f}, {0.0f, 1.0f, 0.0f} , {0.0f, 0.0f, 50.0f} , {0.0f, 1.0f, 0.0f} };
-	primitive = std::make_shared<Primitive>(*this);
-	VkDeviceSize primitiveSize = (VkDeviceSize)(rawData.size() * sizeof(rawData[0]));
-	primitive->pBuffer->createBuffer(primitiveSize,VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	vkQueueWaitIdle(graphicsQueue);
-
-	void* data;
-	vkMapMemory(device, primitive->pBuffer->getVkMemoryHandle(), 0, primitiveSize, 0, &data);
-	memcpy(data, rawData.data(), primitiveSize);
-	vkUnmapMemory(device, primitive->pBuffer->getVkMemoryHandle());
-
-#endif
-	primitive = std::make_shared<Primitive>(*this);
-
-	primitive->loadFromFile("shapes/AxisColored.txt");
-
-	vertexBuffer = std::make_shared<ExpandBufferDeque>(*this);
-
-	vertexBuffer->setHotBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-	vertexBuffer->setColdBufferSpecificParameters(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	vertexBuffer->createBuffer(sizeof(itertionMetod->result[0]), 1024);
-
-	//создаём буфер для обмена
-	swapForVertexBuffer = std::make_shared<Buffer>(*this);
-	swapForVertexBuffer->createBuffer(sizeof(itertionMetod->result[0]), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-}
 
 void Render::createIndexBuffer()
 {
@@ -950,36 +918,15 @@ void Render::createDescriptorSets()
 	}
 }
 
-void Render::expandVertexBuffer()
-{
-	static auto startTime = std::chrono::high_resolution_clock::now();
-	static auto lastTime = startTime;
-	static int rawOffset = 6;
-	auto currentTime = std::chrono::high_resolution_clock::now();
-	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-	float lastPeriod = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
-
-	if (itertionMetod->needUpdate())
-	{
-		//КОСТЫЛЬ Перевести на систему событий
-		vkQueueWaitIdle(graphicsQueue);
-
-		VkDeviceSize bufferSize = sizeof(itertionMetod->result[0]);
-		
-		void* data;
-		vkMapMemory(device, swapForVertexBuffer->getVkMemoryHandle(), 0, bufferSize, 0, &data);
-		//memcpy(data, poligon.data(), (size_t)bufferSize);
-		memcpy(data, &(itertionMetod->result.back()), bufferSize);
-		vkUnmapMemory(device, swapForVertexBuffer->getVkMemoryHandle());
-
-		vertexBuffer->addBuffer(*swapForVertexBuffer.get());
-	}
-
-
-}
 
 void Render::createCommandBuffers()
 {
+	primitive->createCommandsBuffers();	
+	primitive->fillCommandsBuffers();
+
+	сurvedPrimitive->createCommandsBuffers();
+	сurvedPrimitive->fillCommandsBuffers();
+
 	commandBuffers.resize(swapChainFramebuffers.size());
 
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -1015,30 +962,6 @@ void Render::createCommandBuffers()
 		renderPassInfo.clearValueCount = 1;
 		renderPassInfo.pClearValues = &clearColor;
 
-		//Подготовим массивы для передачи данных о вершинах
-		std::vector<VkBuffer> rawVertexBuffer;
-		std::vector<VkDeviceSize> rawVertexOffsets;
-
-		uint32_t vertexCount = 0;
-
-		vertexCount += static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3));
-		rawVertexBuffer.push_back(vertexBuffer->hotBuffer.getVkBufferHandle());
-		rawVertexOffsets.push_back(0);
-
-		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
-		VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffers[i], 0, static_cast<uint32_t>(rawVertexBuffer.size()), rawVertexBuffer.data(), rawVertexOffsets.data());
-		vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
-		vkCmdDraw(commandBuffers[i], vertexCount, 1, 0, 0);
-		vkCmdEndRenderPass(commandBuffers[i]);
-
-		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to record command buffer!");
-		}
 	}
 
 
@@ -1069,42 +992,13 @@ void Render::recreateCommandBuffers(int bufferNumber)
 	renderPassInfo.clearValueCount = 1;
 	renderPassInfo.pClearValues = &clearColor;
 
-	//Подготовим массивы для передачи данных о вершинах
-	std::vector<VkBuffer> rawVertexBuffer;
-	std::vector<VkDeviceSize> rawVertexOffsets;
-	uint32_t vertexCount = 0;
-	for (auto coldBuffer : vertexBuffer->coldBuffers)
-	{
-		vertexCount += static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(glm::vec3));
-		rawVertexBuffer.push_back(coldBuffer->getVkBufferHandle());
-		rawVertexOffsets.push_back(0);
-	}
-	vertexCount += static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3));
-	rawVertexBuffer.push_back(vertexBuffer->hotBuffer.getVkBufferHandle());
-	rawVertexOffsets.push_back(0);
+	std::vector <VkCommandBuffer> pCommandBuffers;
+	pCommandBuffers.push_back(сurvedPrimitive->getCommandBuffer(bufferNumber));
+	pCommandBuffers.push_back(primitive->getCommandBuffer(bufferNumber));
 
-	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(commandBuffers[bufferNumber], &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0].GetPipeline());
-
-	for (auto coldBuffer : vertexBuffer->coldBuffers)
-	{
-		VkBuffer vertexBuffers[] = { coldBuffer->getVkBufferHandle() };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
-		vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
-		vkCmdDraw(commandBuffers[bufferNumber], static_cast<uint32_t>(coldBuffer->getBufferSize() / sizeof(glm::vec3)), 1, 0, 0);
-	}
-
-	VkBuffer vertexBuffers[] = { vertexBuffer->hotBuffer.getVkBufferHandle() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffers[bufferNumber], 0, 1, vertexBuffers, offsets);
-	vkCmdBindDescriptorSets(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[bufferNumber], 0, nullptr);
-	vkCmdDraw(commandBuffers[bufferNumber], static_cast<uint32_t>(vertexBuffer->hotBuffer.getUsingMemorySize() / sizeof(glm::vec3)), 1, 0, 0);
-
-	//Отрисовываем координатную сетку
-	vkCmdBindPipeline(commandBuffers[bufferNumber], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[1].GetPipeline());
-	primitive->addComandsToCommandBuffer(commandBuffers[bufferNumber], descriptorSets[bufferNumber], pipelineLayout);
+	vkCmdExecuteCommands(commandBuffers[bufferNumber], pCommandBuffers.size(), pCommandBuffers.data());
 
 	//закрываем буфер на запись
 	vkCmdEndRenderPass(commandBuffers[bufferNumber]);
@@ -1140,6 +1034,17 @@ void Render::createSyncObjects()
 	}
 }
 
+void Render::createPrimitive()
+{
+	сurvedPrimitive = std::make_shared<CurvedPrimitive>(*this, swapChainFramebuffers.size(), 0, "curved");
+	сurvedPrimitive->fillCommandsBuffers();
+	сurvedPrimitive->connectToItertionMetod(itertionMetod);
+
+	primitive = std::make_shared<StaticPrimitive>(*this, swapChainFramebuffers.size(), 1, "axis");
+	primitive->loadFromFile("shapes/AxisColored.txt");
+
+}
+
 void Render::drawFrame()
 {
 	//Ждём ограждение
@@ -1161,16 +1066,18 @@ void Render::drawFrame()
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	// Check if a previous frame is using this image (i.e. there is its fence to wait on)
+	// Проверяем находиться ли кадр на выполнении и дожидаемся его
 	if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
 	{
 		vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 	}
 
-	// Mark the image as now being in use by this frame
+	// Поднимаем забор, о сообщающий о формировании команд на выполнение
 	imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 	
-	expandVertexBuffer();
+	recreateCommandBuffers(imageIndex);
+	сurvedPrimitive->updateInformation();
+	сurvedPrimitive->updateCommandsBuffers(imageIndex);
 	recreateCommandBuffers(imageIndex);
 	updateUniformBuffer(imageIndex);
 
@@ -1183,6 +1090,7 @@ void Render::drawFrame()
 	submitInfo.pWaitSemaphores = waitSemaphores;
 
 	submitInfo.pWaitDstStageMask = waitStages;
+
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
 

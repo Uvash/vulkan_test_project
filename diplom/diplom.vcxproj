@@ -169,7 +169,9 @@
     <ClCompile Include="iteratorMetods\AbstractIterationMetod.cpp" />
     <ClCompile Include="iteratorMetods\RungeKutte3d.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Primitive\CurvedPrimitive.cpp" />
     <ClCompile Include="Primitive\Primitive.cpp" />
+    <ClCompile Include="Primitive\StaticPrimitive.cpp" />
     <ClCompile Include="Render.cpp" />
     <ClCompile Include="renderHelp\GraphicsPipeline.cpp" />
     <ClCompile Include="renderHelp\DescriptorSetLayout.cpp" />
@@ -188,7 +190,9 @@
     <ClInclude Include="ComplexBuffer.h" />
     <ClInclude Include="DiplomApp.h" />
     <ClInclude Include="ExpandBufferDeque.h" />
+    <ClInclude Include="Primitive\CurvedPrimitive.h" />
     <ClInclude Include="Primitive\Primitive.h" />
+    <ClInclude Include="Primitive\StaticPrimitive.h" />
     <ClInclude Include="renderHelp\HelpStructures.h" />
     <ClInclude Include="iteratorMetods\AbstractIterationMetod.h" />
     <ClInclude Include="iteratorMetods\RungeKutte3d.h" />

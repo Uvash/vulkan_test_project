@@ -6,11 +6,13 @@
 class Buffer;
 class ComplexBuffer;
 class Render;
+class CurvedPrimitive;
 
 
 class ExpandBufferDeque
 {
 friend Render;
+friend CurvedPrimitive;
 public:
 	void setHotBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements);
 	void setColdBufferSpecificParameters(VkBufferUsageFlags newBufferFlags, VkMemoryPropertyFlags newMemRequirements);
